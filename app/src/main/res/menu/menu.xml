@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+<item android:title="Synchronisation Produits"
+    android:id="@+id/sync_products"
+    android:icon="@drawable/ic_sync_24" />
+<item android:title="Synchronisation Employés"
+    android:id="@+id/sync_employees"
+    android:icon="@drawable/ic_sync_24" />
+
+    <item android:title="Liste des Employés"
+        android:id="@+id/list_employees"
+        android:icon="@drawable/ic_sync_24" />
+    <item android:title="Liste des ventes"
+        android:id="@+id/list_sales"
+        android:icon="@drawable/ic_sync_24" />
+</menu>
