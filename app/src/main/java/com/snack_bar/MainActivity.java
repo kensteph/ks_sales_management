@@ -71,7 +71,7 @@ public class MainActivity extends AppCompatActivity {
         ActionBar actionBar = getSupportActionBar();
         actionBar.setHomeButtonEnabled(false);
         actionBar.setDisplayHomeAsUpEnabled(false);
-        actionBar.setTitle("Authentification Employé");
+        actionBar.setTitle("KSSM");
         //HELPER
         helper = new Helper();
         //DATABASE
@@ -237,17 +237,6 @@ public class MainActivity extends AppCompatActivity {
 
         }
     };
-
-
-    //SYNCHRONISATION DES PRODUITS
-//    private void synchronizeProducts(){
-//        Toast.makeText(getApplicationContext(),"Synchronisation des produits....",Toast.LENGTH_LONG).show();
-//    }
-//
-//    //SYNCHRONISATION DES EMPLOYEES
-//    private void synchronizeEmployees(){
-//        Toast.makeText(getApplicationContext(),"Synchronisation des employés....",Toast.LENGTH_LONG).show();
-//    }
 
     //VERIFY FINGER
     private FingerPrint verifyFingerPrints(){

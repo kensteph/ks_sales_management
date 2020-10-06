@@ -78,6 +78,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                     "        employe_id INTEGER," +
                     "        empreinte_nom TEXT," +
                     "        empreinte TEXT," +
+                    "        template TEXT," +
                     "        create_at DATETIME DEFAULT CURRENT_TIMESTAMP);";
 
     public DatabaseHelper(Context context) {
@@ -214,6 +215,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         values.put("employe_id", fingerPrint.getEmployeeId());
         values.put("empreinte_nom", "finger");
         values.put("empreinte", fingerPrint.getFingerPrintByteArray());
+        values.put("template", fingerPrint.getFingerPrintTemplate());
         db.insert(TABLE_FINGERPRINTS, null, values);
         db.close();
     }
@@ -248,7 +250,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public List<SaleItemListModel> getAllSales() {
         SQLiteDatabase db = this.getWritableDatabase();
         List<SaleItemListModel> saleList = new ArrayList<SaleItemListModel>(); // Create an ArrayList object
-        String query="SELECT * FROM sales,employes WHERE sales.employe_id=employes.employe_id ORDER BY vente_id";
+        String query="SELECT * FROM sales,employes WHERE sales.employe_id=employes.employe_id ORDER BY vente_id DESC";
         Cursor cursor2 = db.rawQuery(query, null);
         while(cursor2.moveToNext()) {
             SaleItemListModel sale = new SaleItemListModel();
@@ -333,7 +335,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         values.put("employe_id", employeeId);
         values.put("empreinte_nom", finger);
         byte[] serializeTemplate = helper.serializedTemplate(imageByteArray);
-        values.put("empreinte", serializeTemplate);
+        values.put("empreinte", imageByteArray);
+        values.put("template", serializeTemplate);
         boolean rep = db.insert(TABLE_FINGERPRINTS, null, values)>0;
         db.close();
         return rep;
@@ -376,6 +379,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         while(cursor2.moveToNext()) {
             FingerPrint fingerPrint = new FingerPrint();
             byte[] fp = cursor2.getBlob(cursor2.getColumnIndexOrThrow("empreinte"));
+            byte[] template = cursor2.getBlob(cursor2.getColumnIndexOrThrow("template"));
             fingerPrint.setEmployeeId(cursor2.getInt(cursor2.getColumnIndexOrThrow("employe_id")));
             String prenom = cursor2.getString(cursor2.getColumnIndexOrThrow("employe_prenom"));
             String nom = cursor2.getString(cursor2.getColumnIndexOrThrow("employe_nom"));
@@ -384,6 +388,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             fingerPrint.setEmployeeFullName(match);
             fingerPrint.setEmployeeCode(code);
             fingerPrint.setFingerPrintByteArray(fp);
+            fingerPrint.setFingerPrintTemplate(template);
             fingerPrintList.add(fingerPrint);
         }
         Log.d("FINGERPRINT1","FOUND : "+fingerPrintList.size());

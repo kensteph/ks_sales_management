@@ -12,6 +12,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.RelativeLayout;
@@ -81,6 +82,16 @@ public class ProductsList extends AppCompatActivity implements ProductListAdapte
         productList.add(new Item(8,1,2,"Spaghetti",150,"https://saudeezagency.com/MyImages/spaghetti.png"));
         productList.add(new Item(9,1,2,"Gatorade",150,"https://saudeezagency.com/MyImages/gatorade.jpg"));
         adapter.notifyDataSetChanged();
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                finish();
+                return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     @Override
@@ -235,6 +246,9 @@ Log.d("ADD ITEM","ITEM ADDED : "+quantity+" "+item.name);
             showProgress("Traitement de la requete...",false);
             clearAll();
             showMessage(true,"Commande enregistrée avec succès...");
+            if(success) {
+                finish();
+            }
         }
 
         @Override

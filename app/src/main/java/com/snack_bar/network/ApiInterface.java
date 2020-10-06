@@ -20,6 +20,6 @@ public interface ApiInterface {
     Call<JsonObject> UploadSaleToServer(@Field("data") String json);
     @FormUrlEncoded
     @POST("employees/finger_prints/")
-    Call<JsonObject> UploadEmployeeToServer(@Field("data") String json);
+    Call<JsonObject> UploadFingerPrintsToServer(@Field("data") String json);
 
 }

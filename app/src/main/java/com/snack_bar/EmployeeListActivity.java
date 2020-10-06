@@ -1,19 +1,28 @@
 package com.snack_bar;
 
+import android.app.AlertDialog;
 import android.app.ProgressDialog;
+import android.content.DialogInterface;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
+import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.snackbar.Snackbar;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.snack_bar.adapter.EmployeeAdapter;
@@ -48,13 +57,13 @@ public class EmployeeListActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_employee_list);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         //LIST OF EMPLOYEES FROM DB
         employeesList = new ArrayList<Employee>();
         //LIST OF FINGERPRINTS FROM DB
         listDbFingerPrints = new ArrayList<FingerPrint>();
         recyclerView = (RecyclerView) findViewById(R.id.recyclerView);
         editTextSearch = (EditText) findViewById(R.id.editTextSearch);
-
         recyclerView.setHasFixedSize(true);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         adapter = new EmployeeAdapter(this,employeesList);
@@ -79,6 +88,26 @@ public class EmployeeListActivity extends AppCompatActivity {
                 filter(editable.toString());
             }
         });
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.sync_finger_print, menu);
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                finish();
+                return true;
+            case R.id.sync_finger_server:
+                synchronizeFingerPrints();
+                return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     private void filter(String text) {
@@ -139,6 +168,20 @@ public class EmployeeListActivity extends AppCompatActivity {
             dialog.dismiss();
         }
     }
+    //Shows a message by using Snackbar
+    private void showMessage(Boolean isSuccessful, String message) {
+        Snackbar snackbar = Snackbar.make(findViewById(android.R.id.content), message, Snackbar.LENGTH_LONG);
+
+        if (isSuccessful)
+        {
+            snackbar.getView().setBackgroundColor(ContextCompat.getColor(EmployeeListActivity.this, R.color.colorAccent));
+        } else
+        {
+            snackbar.getView().setBackgroundColor(ContextCompat.getColor(EmployeeListActivity.this, R.color.design_default_color_error));
+        }
+
+        snackbar.show();
+    }
     //UPLOAD FINGER PRINTS TO SERVER
     //LOAD ALL THE FINGERPRINTS FROM DB
     public class LoadFingerPrintsFromDB extends AsyncTask<String,String,List<FingerPrint>> {
@@ -166,30 +209,31 @@ public class EmployeeListActivity extends AppCompatActivity {
         }
     }
     private void postFingerPrints(String data) {
-        showProgress("Synchronisation des empreintes.....",true);
+        showProgress("Envoie  des empreintes vers le serveur.....",true);
         List<Integer> salesSucceedID;
         ApiInterface apiService =
                 ApiClient.getClient().create(ApiInterface.class);
-        Call<JsonObject> call = apiService.UploadSaleToServer(data);
+        Call<JsonObject> call = apiService.UploadFingerPrintsToServer(data);
         call.enqueue(new Callback<JsonObject>() {
             @Override
             public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
-                int nbSuccess=0;
+                String error="";
+                String success="";
                 //Get the response
                 JSONObject jsonObject = null;
                 try {
                     jsonObject = new JSONObject(new Gson().toJson(response.body()));
                     JSONObject Response  = jsonObject.getJSONObject("response");
-                    nbSuccess = Response.getInt("TotalSuccess");
-                    JSONArray list = Response.getJSONArray("SuccessId");
-
+                    success = Response.getString("success");
+                    error = Response.getString("error");
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
-                if(nbSuccess==0) {
-                    Toast.makeText(getApplicationContext()," Aucune empreinte n'a été synchronisée...", Toast.LENGTH_LONG).show();
+                if(success=="") {
+                    //Toast.makeText(getApplicationContext()," Aucune empreinte n'a été synchronisée...", Toast.LENGTH_LONG).show();
+                    showMessage(false, " Aucune empreinte n'a été synchronisée...");
                 }else{
-                    Toast.makeText(getApplicationContext(), nbSuccess+" empreintes ont été synchronisées avec succès...", Toast.LENGTH_LONG).show();
+                    Toast.makeText(getApplicationContext(), "Les empreintes ont été synchronisées avec succès...", Toast.LENGTH_LONG).show();
                 }
 
                 Log.d("SERVER",jsonObject.toString());
@@ -198,14 +242,14 @@ public class EmployeeListActivity extends AppCompatActivity {
 
             @Override
             public void onFailure(Call<JsonObject> call, Throwable t) {
-                showProgress("Synchronisation des ventes terminée.....",false);
+                showProgress("Envoie  des empreintes terminée.....",false);
                 Toast.makeText(getApplicationContext(), t.toString(), Toast.LENGTH_LONG).show();
                 Log.d("SERVER",t.toString());
             }
 
         });
     }
-    private void SaveFingerPrintsToServer(){
+    private void prepareFingerPrintsToSend() {
         JSONArray array = new JSONArray();
         for (FingerPrint fingerPrint : listDbFingerPrints)
         {
@@ -222,8 +266,93 @@ public class EmployeeListActivity extends AppCompatActivity {
             }
 
         }
+        //TEST
+        String byteArray = "1111111111111111111001111111111111111111\n" +
+                "1111111111111111110000111111111111111111\n" +
+                "1111111111111111111111111111111111111111\n" +
+                "1111111111111111111111111111111111111111\n" +
+                "1111111111111111111111111111111111111111\n" +
+                "1111111111111111111111111111111111111111\n" +
+                "1111111111111111100000011111111111111111\n" +
+                "1111111111111111000000001111111111111111\n" +
+                "1111111111111110000110000111111111111111\n" +
+                "1111111111111110000110000111111111111111\n" +
+                "1111111111111100010000000011111111111111\n" +
+                "1111111111111100010000000011111111111111\n" +
+                "1111111111111100010000000011111111111111\n" +
+                "1111111111111000000000000001111111111111\n" +
+                "1111111111111000000000000001111111111111\n" +
+                "1111111111111001111000000001111111111111\n" +
+                "1111111111111001110000111011111111111111\n" +
+                "1111111111111001111101001101111111111111\n" +
+                "1111111111111011111110011001111111111111\n" +
+                "1111111111111011111011111101111111111111\n" +
+                "1111111111111011111010011001111111111111\n" +
+                "1111111111111101110000010011111111111111\n" +
+                "1111111111111101100000010011111111111111\n" +
+                "1111111111111000000000000001111111111111\n" +
+                "1111111111111000000000000001111111111111\n" +
+                "1111111111111100000000000011111111111111\n" +
+                "1111111111111100000000000011111111111111\n" +
+                "1111111111111100000000000011111111111111\n" +
+                "1111111111111100000000000011111111111111\n" +
+                "1111111111111100001000000011111111111111\n" +
+                "1111111111111100001000000011111111111111\n" +
+                "1111111111111000001000000001111111111111\n" +
+                "1111111111111000000000000001111111111111\n" +
+                "1111111111111000000000000001111111111111\n" +
+                "1111111111111000000000000001111111111111\n" +
+                "1111111111111100000000000011111111111111\n" +
+                "1111111111111100000000000011111111111111\n" +
+                "1111111111111100000000000011111111111111\n" +
+                "1111111111111110000000000111111111111111\n" +
+                "1111111111111111111001111111111111111111\n" +
+                "\n";
+        JSONObject testObj = new JSONObject();
+        try{
+        testObj.put("EmployeeId", 1);
+        testObj.put("Finger", "POUCE");
+        testObj.put("FingerPrint", byteArray);
+        testObj.put("FingerPrintTemplate",byteArray);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        array.put(testObj);
         String data = array.toString();
         Log.d("SERVER","JSON : "+data);
         postFingerPrints(data);
+    }
+    //SYNCHRONIZE THE FINGER TO SERVER
+    private void synchronizeFingerPrints() {
+        AlertDialog.Builder builder;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
+        {
+            builder = new AlertDialog.Builder(EmployeeListActivity.this, android.R.style.Theme_Material_Dialog_Alert);
+        } else
+        {
+            builder = new AlertDialog.Builder(EmployeeListActivity.this);
+        }
+        builder.setCancelable(false);
+        builder.setTitle("Synchronisation des empreintes")
+                .setMessage("Voulez-vous synchroniser les empreintes ver le serveur?")
+                .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener()
+                {
+                    public void onClick(DialogInterface dialog, int which)
+                    {
+                        showProgress("Synchronisation des empreintes vers le serveur...",true);
+                        //Get FINGERPRINTS fom DB
+                        new LoadFingerPrintsFromDB().execute();
+                        //PREPARE & POST THEM TO THE SERVER
+                        prepareFingerPrintsToSend();
+                    }
+                })
+                .setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener()
+                {
+                    public void onClick(DialogInterface dialog, int which)
+                    {
+                        // do nothing
+                    }
+                })
+                .show();
     }
 }
