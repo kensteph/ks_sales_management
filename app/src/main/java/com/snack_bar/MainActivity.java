@@ -194,7 +194,7 @@ public class MainActivity extends AppCompatActivity {
                 case Status.ERROR:
                     tvStatus.setText("Error");
                     buttonRetry.setVisibility(View.VISIBLE);
-                    tvError.setBackgroundColor(Color.rgb(245,0,0));
+                    tvError.setTextColor(Color.rgb(245,0,0));
                     tvError.setText(msg.getData().getString("errorMessage"));
                     break;
                 default:

@@ -24,6 +24,8 @@
             android:textSize="20sp"
             android:padding="16dp"
             android:textColor="@color/colorPrimary"
+            android:ellipsize="end"
+            android:maxLines="1"
             />
 
         <ImageButton

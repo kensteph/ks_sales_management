@@ -58,7 +58,7 @@ public  class Helper {
         FingerPrint found = null;
         for (FingerPrint candidate : candidates) {
             //FingerprintTemplate fingerprintDB = createTemplate(candidate.getFingerPrintByteArray());
-            FingerprintTemplate fingerprintDB = new FingerprintTemplate(candidate.getFingerPrintByteArray());
+            FingerprintTemplate fingerprintDB = new FingerprintTemplate(candidate.getFingerPrintTemplate());
             double score = matcher.match(fingerprintDB);
             if (score > high) {
                 high = score;
