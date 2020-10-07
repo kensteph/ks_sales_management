@@ -52,6 +52,7 @@ public class ProductsList extends AppCompatActivity implements ProductListAdapte
         ActionBar actionBar = getSupportActionBar();
         //GET THE INFO FROM THE ACTIVITY
         String EmployeeFullName = getIntent().getStringExtra("EmployeeFullName");
+        employeeSelectedID = getIntent().getIntExtra("EmployeeId",0);
         actionBar.setHomeButtonEnabled(true);
         actionBar.setDisplayHomeAsUpEnabled(true);
         actionBar.setTitle(EmployeeFullName);
@@ -236,7 +237,7 @@ Log.d("ADD ITEM","ITEM ADDED : "+quantity+" "+item.name);
         @Override
         protected Boolean doInBackground(Void... params)
         {
-            employeeSelectedID=helper.getRandomId(100,4000);
+            //employeeSelectedID=helper.getRandomId(100,4000);
             boolean rep = db.saveSaleDetails(orderList,materialID,employeeSelectedID,employeeCashierID,0.0);
             return rep;
         }

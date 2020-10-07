@@ -91,14 +91,15 @@ public class MainActivity extends AppCompatActivity {
         buttonRetry.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                //startScan();
-                Intent intent = new Intent(MainActivity.this, ProductsList.class);
-                intent.putExtra("EmployeeFullName","Ansderly RAMEAU | AR007-1");
-                startActivity(intent);
+                startScan();
+                // FOR TEST
+//                Intent intent = new Intent(MainActivity.this, ProductsList.class);
+//                intent.putExtra("EmployeeFullName","Ansderly RAMEAU | AR007-1");
+//                startActivity(intent);
             }
         });
         //LOAD ALL FINGERPRINTS FROM DB
-        //new LoadFingerPrintsFromDB().execute();
+        new LoadFingerPrintsFromDB().execute();
     }
 
     @Override
@@ -185,7 +186,7 @@ public class MainActivity extends AppCompatActivity {
                     break;
                 case Status.SCANNER_POWERED_OFF:
                     tvStatus.setText("Reader is off");
-                    buttonRetry.setVisibility(View.GONE);
+                    buttonRetry.setVisibility(View.VISIBLE);
                     break;
                 case Status.SUCCESS:
                     tvStatus.setText("Fingerprint successfully captured");
@@ -215,26 +216,26 @@ public class MainActivity extends AppCompatActivity {
             int status = msg.getData().getInt("status");
             Intent intent = new Intent(MainActivity.this, ProductsList.class);
             intent.putExtra("status", status);
-            intent.putExtra("EmployeeFullName","Ansderly RAMEAU | AR007-1");
-//            if (status == Status.SUCCESS) {
-//                image = msg.getData().getByteArray("img");
-//                intent.putExtra("img", image);
-//                fingerCaptured = image;
-//                FingerPrint match =  verifyFingerPrints();
-//                if(match != null){
-//                    Toast.makeText(getApplicationContext(),"Vous etes "+match.getEmployeeId(),Toast.LENGTH_LONG).show();
-//                }else{
-//                    Toast.makeText(getApplicationContext(),"Aucune correspondance...",Toast.LENGTH_LONG).show();
-//                }
-//            } else {
-//                errorMessage = msg.getData().getString("errorMessage");
-//                intent.putExtra("errorMessage", errorMessage);
-//                tvError.setText(errorMessage);
-//            }
-
-            // Launch new intent instead of loading fragment
-            startActivity(intent);
-
+            if (status == Status.SUCCESS) {
+                image = msg.getData().getByteArray("img");
+               // intent.putExtra("img", image);
+                fingerCaptured = image;
+                FingerPrint match =  verifyFingerPrints();
+                if(match != null){
+                    //Toast.makeText(getApplicationContext(),"Vous etes "+match.getEmployeeId(),Toast.LENGTH_LONG).show();
+                    // Launch new intent instead of loading fragment
+                    intent.putExtra("EmployeeFullName",match.getEmployeeFullName()+" | "+match.getEmployeeCode());
+                    intent.putExtra("EmployeeId",match.getEmployeeId());
+                    startActivity(intent);
+                }else{
+                    Toast.makeText(getApplicationContext(),"Aucune correspondance...",Toast.LENGTH_LONG).show();
+                    buttonRetry.setVisibility(View.VISIBLE);
+                }
+            } else {
+                errorMessage = msg.getData().getString("errorMessage");
+                intent.putExtra("errorMessage", errorMessage);
+                tvError.setText(errorMessage);
+            }
         }
     };
 
@@ -263,7 +264,7 @@ public class MainActivity extends AppCompatActivity {
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
-            showProgress("Chargement des empreintes...",true);
+            showProgress("Initialisation du système...",true);
         }
 
         @Override
@@ -271,9 +272,8 @@ public class MainActivity extends AppCompatActivity {
             super.onPostExecute(fingerPrints);
             listDbFingerPrints = fingerPrints;
             Log.d("FINGERPRINT2","FOUND : "+listDbFingerPrints.size());
-            tvStatus.setText("QTY FINGERPRINTS" +
-                    " : "+listDbFingerPrints.size());
-            showProgress("Chargement des empreintes...",false);
+            //tvStatus.setText("QTY FINGERPRINTS" +" : "+listDbFingerPrints.size());
+            showProgress("Pret!",false);
         }
     }
     private void showProgress(String msg,boolean show) {
@@ -374,20 +374,22 @@ public class MainActivity extends AppCompatActivity {
                         Log.d("SERVER 1",data.getString("employe_prenom"));
                     }
 
-                    //GET ALL FINGERPRINTS
-                    JSONArray arraySub = jsonObject.getJSONArray("FingerPrints");
-                    //EMPTY THE FINGERPRINTS TABLE
-                    db.emptyTable("empreintes");
-                    for (int i = 0; i < arraySub.length(); i++) {
-                        JSONObject data = arraySub.getJSONObject(i);
-                        FingerPrint fingerPrint = new FingerPrint();
-                        fingerPrint.setEmployeeId(data.getInt("employe_id"));
-                        Bitmap bfp =helper.base64ToBitmap(data.getString("empreinte"));
-                        byte[] finger = helper.bitmapToByteArray(bfp)  ;
-                        fingerPrint.setFingerPrintByteArray(finger);
-                        db.saveFingerPrints(fingerPrint);
-                        Log.d("SERVER 2",data.getString("name"));
-                    }
+//                    //GET ALL FINGERPRINTS
+//                    JSONArray arraySub = jsonObject.getJSONArray("FingerPrints");
+//                    //EMPTY THE FINGERPRINTS TABLE
+//                    db.emptyTable("empreintes");
+//                    for (int i = 0; i < arraySub.length(); i++) {
+//                        JSONObject data = arraySub.getJSONObject(i);
+//                        int employeeId=data.getInt("employe_id");
+////                        String fingerPrint=data.getString("finger_print");
+////                        String template=data.getString("template");
+//                        byte[] fp = (byte[]) data.get("finger_print");
+//                        byte[] tp = (byte[]) data.get("template");
+//
+//                        db.saveFingerPrintsFromServer(employeeId,fp,tp);
+//                        Log.d("SERVER 2","EMPLOYE ID : "+employeeId);
+//                    }
+
                     showProgress("",false);
                     showMessage(true, "Synchronisation terminée...");
                 } catch (JSONException e) {

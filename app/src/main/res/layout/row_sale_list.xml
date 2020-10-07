@@ -21,7 +21,7 @@
             android:layout_height="wrap_content"
             android:id="@+id/txtEmployee"
             android:text="Nom de l'employé"
-            android:textSize="20sp"
+            android:textSize="18sp"
             android:padding="16dp"
             android:textColor="@color/colorPrimary"
             android:ellipsize="end"

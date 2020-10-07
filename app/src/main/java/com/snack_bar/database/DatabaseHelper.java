@@ -22,7 +22,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     private Context context;
     private final String TAG = "INIT_DB";
     private static final int databaseVersion = 1;
-    private static final String databaseName = "dbSales";
+    private static final String databaseName = "dbKSSM";
     private Helper helper;
     // Table Names
     private static final String TABLE_CATEGORIES = "categories";
@@ -209,13 +209,13 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
     //SAVE FINGERPRINTS
-    public void saveFingerPrints(FingerPrint fingerPrint) {
+    public void saveFingerPrintsFromServer(int employeeId,byte[] fingerPrint,byte[] template) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
-        values.put("employe_id", fingerPrint.getEmployeeId());
+        values.put("employe_id", employeeId);
         values.put("empreinte_nom", "finger");
-        values.put("empreinte", fingerPrint.getFingerPrintByteArray());
-        values.put("template", fingerPrint.getFingerPrintTemplate());
+        values.put("empreinte", fingerPrint);
+        values.put("template", template);
         db.insert(TABLE_FINGERPRINTS, null, values);
         db.close();
     }

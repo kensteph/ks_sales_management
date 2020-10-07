@@ -109,7 +109,8 @@ public class AddFingerPrintActivity extends AppCompatActivity {
         buttonAddFingerprint.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                saveFingerPrintTo("SERVER");
+                buttonAddFingerprint.setVisibility(View.GONE);
+                saveFingerPrintTo("LOCAL");
             }
         });
 
@@ -329,6 +330,7 @@ public class AddFingerPrintActivity extends AppCompatActivity {
                     showMessage(false, " Aucune empreinte n'a été synchronisée...");
                 }else{
                     Toast.makeText(getApplicationContext(), "Les empreintes ont été synchronisées avec succès...", Toast.LENGTH_LONG).show();
+                    finish();
                 }
 
                 Log.d("SERVER",jsonObject.toString());
@@ -362,11 +364,14 @@ public class AddFingerPrintActivity extends AppCompatActivity {
             }
             if(qty==4) {
                 Toast.makeText(getApplicationContext(), "Empreintes ajoute avec succès ", Toast.LENGTH_LONG).show();
+                finish();
             }else{
                 Toast.makeText(getApplicationContext(), "Echec lors de la sauvegarde des emprentes...", Toast.LENGTH_LONG).show();
+                buttonAddFingerprint.setVisibility(View.VISIBLE);
             }
         }else{
             Toast.makeText(getApplicationContext(),"Veuillez prendre toutes les Empreintes...",Toast.LENGTH_LONG).show();
+            buttonAddFingerprint.setVisibility(View.VISIBLE);
         }
     }
 
