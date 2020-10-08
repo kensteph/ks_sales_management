@@ -13,4 +13,7 @@
     <item android:title="Liste des ventes"
         android:id="@+id/list_sales"
         android:icon="@drawable/ic_sync_24" />
+    <item android:title="Manage Fingerprint"
+        android:id="@+id/manage_finger"
+        android:icon="@drawable/ic_sync_24" />
 </menu>

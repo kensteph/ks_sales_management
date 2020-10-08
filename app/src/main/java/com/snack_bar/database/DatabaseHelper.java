@@ -8,6 +8,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
 import com.snack_bar.model.Employee;
+import com.snack_bar.model.EmployeeFingerTemplate;
 import com.snack_bar.model.FingerPrint;
 import com.snack_bar.model.Item;
 import com.snack_bar.model.Order;
@@ -158,8 +159,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.insert(TABLE_SALES, null, values);
         db.close();
     }
-    //SAVE SALE DETAILS
-    // insert data using transaction and prepared statement
+    //SAVE SALE DETAILS | insert data using transaction and prepared statement
     public boolean saveSaleDetails(List<Order> saleDetails, int materialID, int employeeID, int cashier, Double totalPrice) {
         boolean done=false;
         SQLiteDatabase db = this.getWritableDatabase();
@@ -207,7 +207,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.insert(TABLE_EMPLOYEES, null, values);
         db.close();
     }
-
     //SAVE FINGERPRINTS
     public void saveFingerPrintsFromServer(int employeeId,byte[] fingerPrint,byte[] template) {
         SQLiteDatabase db = this.getWritableDatabase();
@@ -226,7 +225,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.close();
         return true;
     }
-
     public List<Item> getProducts() {
         SQLiteDatabase db = this.getWritableDatabase();
         List<Item> listItems = new ArrayList<Item>(); // Create an ArrayList object
@@ -245,8 +243,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.close();
         return listItems;
     }
-
-
     public List<SaleItemListModel> getAllSales() {
         SQLiteDatabase db = this.getWritableDatabase();
         List<SaleItemListModel> saleList = new ArrayList<SaleItemListModel>(); // Create an ArrayList object
@@ -288,7 +284,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.close();
         return saleList;
     }
-
     //GET SALES DESCRIPTION
     public List<Order> getSaleDetails(int saleId) {
         SQLiteDatabase db = this.getWritableDatabase();
@@ -312,7 +307,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.close();
         return details;
     }
-
     //GET SALES DESCRIPTION
     public boolean deleteSale(int saleId) {
         SQLiteDatabase db = this.getWritableDatabase();
@@ -327,7 +321,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.close();
         return done;
     }
-
     //ADD FINGERPRINT FOR EMPLOYEE
     public boolean addFingerPrint(byte[] imageByteArray, int employeeId,String finger) {
         SQLiteDatabase db = this.getWritableDatabase();
@@ -341,36 +334,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.close();
         return rep;
     }
-//    public void insertImage(byte[] imageByteArray, String imageId,String infoUser) {
-//        SQLiteDatabase db = this.getWritableDatabase();
-//        ContentValues values = new ContentValues();
-//        values.put(IMAGE_ID, imageId);
-//        values.put(INFO_USER, infoUser);
-//        values.put(IMAGE_BITMAP, imageByteArray);
-//        db.insert(TABLE_IMAGE, null, values);
-//        db.close();
-//    }
-
-//    public ImageHelper getImage(String imageId) {
-//        SQLiteDatabase db = this.getWritableDatabase();
-//
-//        Cursor cursor2 = db.query(TABLE_IMAGE,
-//                new String[] {COL_ID, IMAGE_ID, IMAGE_BITMAP},IMAGE_ID
-//                +" LIKE '"+imageId+"%'", null, null, null, null);
-//        ImageHelper imageHelper = new ImageHelper();
-//
-//        if (cursor2.moveToFirst()) {
-//            do {
-//                imageHelper.setImageId(cursor2.getString(1));
-//                imageHelper.setImageByteArray(cursor2.getBlob(2));
-//            } while (cursor2.moveToNext());
-//        }
-//
-//        cursor2.close();
-//        db.close();
-//        return imageHelper;
-//    }
-
+    //GET INFO EMPLOYEE
     public List<FingerPrint> getAllFingersPrintsFromDB() {
         SQLiteDatabase db = this.getWritableDatabase();
         List<FingerPrint> fingerPrintList = new ArrayList<FingerPrint>(); // Create an ArrayList object
@@ -396,7 +360,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.close();
         return fingerPrintList;
     }
-
     //GET ALL EMPLOYEES FROM THE DB
     public List<Employee> getAllEmployeesFromDB() {
         SQLiteDatabase db = this.getWritableDatabase();
@@ -416,6 +379,42 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         cursor2.close();
         db.close();
         return employeeList;
+    }
+    //GET SINGLE EMPLOYEES FROM THE DB
+    public Employee getEmployeeInfo(int employeeID) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        Employee employee = null;
+        String query="SELECT * FROM employes WHERE employe_id="+employeeID;
+        Cursor cursor2 = db.rawQuery(query, null);
+        while(cursor2.moveToNext()) {
+            String prenom = cursor2.getString(cursor2.getColumnIndexOrThrow("employe_prenom"));
+            String nom = cursor2.getString(cursor2.getColumnIndexOrThrow("employe_nom"));
+            String code = cursor2.getString(cursor2.getColumnIndexOrThrow("employe_code"));
+            int idEmp = cursor2.getInt(cursor2.getColumnIndexOrThrow("employe_id"));
+            int entreprise_id = cursor2.getInt(cursor2.getColumnIndexOrThrow("entreprise_id"));
+            employee = new Employee(idEmp,entreprise_id,code,prenom,nom);
+        }
+        Log.d("EMPLOYEE DATA","FOUND : "+employee.toString());
+        cursor2.close();
+        db.close();
+        return employee;
+    }
+    //GET ONLY FINGERPRINT TEMPLATE
+    public List<EmployeeFingerTemplate> getFingersTemplate() {
+        SQLiteDatabase db = this.getWritableDatabase();
+        List<EmployeeFingerTemplate> fingerPrintTemplates = new ArrayList<EmployeeFingerTemplate>(); // Create an ArrayList object
+        String query="SELECT employe_id,template FROM empreintes";
+        Cursor cursor2 = db.rawQuery(query, null);
+        while(cursor2.moveToNext()) {
+            byte[] template = cursor2.getBlob(cursor2.getColumnIndexOrThrow("template"));
+            int employeeId = cursor2.getInt(cursor2.getColumnIndexOrThrow("employe_id"));
+            EmployeeFingerTemplate fpTemplate = new EmployeeFingerTemplate(employeeId,template);
+            fingerPrintTemplates.add(fpTemplate);
+        }
+        Log.d("FINGERPRINT1","FOUND : "+fingerPrintTemplates.size());
+        cursor2.close();
+        db.close();
+        return fingerPrintTemplates;
     }
 
 }

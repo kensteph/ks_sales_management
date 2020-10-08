@@ -4,10 +4,10 @@ import android.app.ProgressDialog;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
-import android.os.Bundle;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
@@ -24,7 +24,6 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.snack_bar.database.DatabaseHelper;
 import com.snack_bar.model.Employee;
-import com.snack_bar.model.FingerPrint;
 import com.snack_bar.network.ApiClient;
 import com.snack_bar.network.ApiInterface;
 import com.snack_bar.util.Helper;
@@ -68,6 +67,7 @@ public class AddFingerPrintActivity extends AppCompatActivity {
         helper = new Helper();
         //DATABASE
         db=new DatabaseHelper(this);
+        Bitmap imgFromServer = helper.getImageFromServer("https://saudeezagency.com/MyImages/coca-cola.jpg");
         //FINGERPRINT INSTANCE FROM KANOPI
         fingerprint = new Fingerprint();
         //VIEWS
@@ -80,10 +80,13 @@ public class AddFingerPrintActivity extends AppCompatActivity {
         rightFinger1 = (ImageView) findViewById(R.id.finger_right1);
         rightFinger2 = (ImageView) findViewById(R.id.finger_right2);
 
+
+
         leftFinger1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 startScan("LF1");
+                leftFinger1.setImageBitmap(imgFromServer);
             }
         });
         leftFinger2.setOnClickListener(new View.OnClickListener() {

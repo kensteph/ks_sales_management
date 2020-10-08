@@ -1,14 +1,9 @@
 package com.snack_bar;
 
-import androidx.appcompat.app.ActionBar;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.content.ContextCompat;
-
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Build;
@@ -25,13 +20,17 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.appcompat.app.ActionBar;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
+
 import com.google.android.material.snackbar.Snackbar;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.machinezoo.sourceafis.FingerprintTemplate;
 import com.snack_bar.database.DatabaseHelper;
 import com.snack_bar.model.Employee;
-import com.snack_bar.model.FingerPrint;
+import com.snack_bar.model.EmployeeFingerTemplate;
 import com.snack_bar.model.Item;
 import com.snack_bar.network.ApiClient;
 import com.snack_bar.network.ApiInterface;
@@ -57,7 +56,7 @@ public class MainActivity extends AppCompatActivity {
     private Button buttonRetry;
     private byte[] fingerCaptured;
     private DatabaseHelper db;
-    private List<FingerPrint> listDbFingerPrints;
+    private List<EmployeeFingerTemplate> listDbFingerPrints;
     private Helper helper;
     private ProgressDialog dialog;
     //Holds all Products
@@ -79,10 +78,9 @@ public class MainActivity extends AppCompatActivity {
         //FINGERPRINT INSTANCE FROM KANOPI
         fingerprint = new Fingerprint();
         //LIST OF FINGERPRINTS FROM DB
-        listDbFingerPrints = new ArrayList<FingerPrint>();
+        listDbFingerPrints = new ArrayList<EmployeeFingerTemplate>();
         productsList = new ArrayList<Item>();
         employeesList = new ArrayList<Employee>();
-
         //LOAD COMPONENTS
         tvStatus = (TextView) findViewById(R.id.tvStatus);
         tvError = (TextView) findViewById(R.id.tvError);
@@ -91,11 +89,12 @@ public class MainActivity extends AppCompatActivity {
         buttonRetry.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                startScan();
+                //startScan();
                 // FOR TEST
-//                Intent intent = new Intent(MainActivity.this, ProductsList.class);
-//                intent.putExtra("EmployeeFullName","Ansderly RAMEAU | AR007-1");
-//                startActivity(intent);
+                Intent intent = new Intent(MainActivity.this, ProductsList.class);
+                intent.putExtra("EmployeeFullName","Ansderly RAMEAU | AR007-1");
+                intent.putExtra("EmployeeId",1);
+                startActivity(intent);
             }
         });
         //LOAD ALL FINGERPRINTS FROM DB
@@ -132,6 +131,9 @@ public class MainActivity extends AppCompatActivity {
             case R.id.list_sales:
                 startActivity(new Intent(MainActivity.this, SalesListActivity.class));
                 return true;
+            case R.id.manage_finger:
+                startActivity(new Intent(MainActivity.this, UploadImageToServer.class));
+                return true;
 
         }
         return super.onOptionsItemSelected(item);
@@ -146,7 +148,6 @@ public class MainActivity extends AppCompatActivity {
     private void startScan() {
         fingerprint.scan(this, printHandler, updateHandler);
     }
-
 
     @Override
     protected void onStop() {
@@ -207,7 +208,6 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     };
-
     Handler printHandler = new Handler(Looper.getMainLooper()) {
         @Override
         public void handleMessage(Message msg) {
@@ -218,14 +218,16 @@ public class MainActivity extends AppCompatActivity {
             intent.putExtra("status", status);
             if (status == Status.SUCCESS) {
                 image = msg.getData().getByteArray("img");
+                //String str_img = msg.getData().getString("img");
+
                // intent.putExtra("img", image);
                 fingerCaptured = image;
-                FingerPrint match =  verifyFingerPrints();
+                Employee match =  verifyFingerPrints();
                 if(match != null){
                     //Toast.makeText(getApplicationContext(),"Vous etes "+match.getEmployeeId(),Toast.LENGTH_LONG).show();
                     // Launch new intent instead of loading fragment
-                    intent.putExtra("EmployeeFullName",match.getEmployeeFullName()+" | "+match.getEmployeeCode());
-                    intent.putExtra("EmployeeId",match.getEmployeeId());
+                    intent.putExtra("EmployeeFullName",match.getFull_name()+" | "+match.getEmployee_code());
+                    intent.putExtra("EmployeeId",match.getEmployee_id());
                     startActivity(intent);
                 }else{
                     Toast.makeText(getApplicationContext(),"Aucune correspondance...",Toast.LENGTH_LONG).show();
@@ -240,25 +242,22 @@ public class MainActivity extends AppCompatActivity {
     };
 
     //VERIFY FINGER
-    private FingerPrint verifyFingerPrints(){
-        FingerPrint fingerPrintEmployee=null ;
+    private Employee verifyFingerPrints(){
+        Employee employee=null ;
         if(fingerCaptured!= null){
             FingerprintTemplate fingerprintCapturedTemplate = helper.createTemplate(fingerCaptured);
-            fingerPrintEmployee = helper.verifyFingerPrint(fingerprintCapturedTemplate,listDbFingerPrints);
+            employee = helper.verifyFingerPrint(fingerprintCapturedTemplate,listDbFingerPrints);
         }else{
             Toast.makeText(getApplicationContext(),"Empreinte invalide...",Toast.LENGTH_LONG).show();
         }
-        return fingerPrintEmployee;
+        return employee;
     }
     //LOAD ALL THE FINGERPRINTS FROM DB
-    public class LoadFingerPrintsFromDB extends AsyncTask<String,String,List<FingerPrint>> {
+    public class LoadFingerPrintsFromDB extends AsyncTask<String,String,List<EmployeeFingerTemplate>> {
 
         @Override
-        protected List<FingerPrint> doInBackground(String... strings) {
-            // Temporary list
-            List<FingerPrint> tempFingerPrints = new ArrayList<>();
-            tempFingerPrints =db.getAllFingersPrintsFromDB();
-            return tempFingerPrints;
+        protected List<EmployeeFingerTemplate> doInBackground(String... strings) {
+            return db.getFingersTemplate();
         }
 
         @Override
@@ -268,7 +267,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         @Override
-        protected void onPostExecute(List<FingerPrint> fingerPrints) {
+        protected void onPostExecute(List<EmployeeFingerTemplate> fingerPrints) {
             super.onPostExecute(fingerPrints);
             listDbFingerPrints = fingerPrints;
             Log.d("FINGERPRINT2","FOUND : "+listDbFingerPrints.size());
@@ -306,7 +305,6 @@ public class MainActivity extends AppCompatActivity {
 
         snackbar.show();
     }
-
     //LOAD DATA FROM SERVER
     //GET ALL THE PRODUCTS
     private void getAllProducts(){
