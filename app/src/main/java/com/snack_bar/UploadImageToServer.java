@@ -1,6 +1,7 @@
 package com.snack_bar;
 
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
@@ -19,6 +20,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.machinezoo.sourceafis.FingerprintTemplate;
+import com.snack_bar.database.BackupData;
 import com.snack_bar.network.ApiClient;
 import com.snack_bar.network.ApiInterface;
 import com.snack_bar.network.ServerResponse;
@@ -27,6 +29,7 @@ import com.snack_bar.util.Helper;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.Map;
@@ -37,10 +40,10 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class UploadImageToServer extends AppCompatActivity {
+public class UploadImageToServer extends AppCompatActivity implements BackupData.OnBackupListener {
 
     private TextView result;
-    private Button btnCompareImage, uploadImage;
+    private Button btnCompareImage, uploadImage,btnBackUp,btnRestoreDB;
     private ImageView imageSelected,imageSelected1;
     private int PICK_PROFILE_IMAGE_REQUEST = 1;
     private Bitmap bitmap;
@@ -50,6 +53,7 @@ public class UploadImageToServer extends AppCompatActivity {
     private String mediaPath;
     private String imageViewClicked;
     ProgressDialog pDialog;
+    private BackupData backupData;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,7 +63,12 @@ public class UploadImageToServer extends AppCompatActivity {
         imageSelected = (ImageView) findViewById(R.id.imageSelected);
         imageSelected1 = (ImageView) findViewById(R.id.imageSelected1);
         btnCompareImage = (Button) findViewById(R.id.btnCompareImage);
+        btnBackUp = (Button) findViewById(R.id.btnBackupDB);
+        btnRestoreDB = (Button) findViewById(R.id.btnRestoreDB);
         helper = new Helper();
+        //BACK UP DATA
+        backupData = new BackupData(this);
+        backupData.setOnBackupListener(this);
         initDialog();
         imageSelected.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -74,56 +83,61 @@ public class UploadImageToServer extends AppCompatActivity {
             public void onClick(View view) {
                 result.setText("");
                 imageViewClicked = "RI";
-                showFileChooser(PICK_PROFILE_IMAGE_REQUEST);
+                //showFileChooser(PICK_PROFILE_IMAGE_REQUEST);
+                PICK_PROFILE_IMAGE_REQUEST=0;//ALL FILES
+                showFileChooser();
             }
         });
         btnCompareImage.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                result.setText("Recherche en cours...");
-//                Bitmap bitmap = ((BitmapDrawable)imageSelected.getDrawable()).getBitmap();
-//                ByteArrayOutputStream stream = new ByteArrayOutputStream();
-//                //LI
-//                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream);
-//                byte [] byte_arr = stream.toByteArray();
-//                //CREATE TEMPLATE FOR THEM
-//                FingerprintTemplate probe = helper.createTemplate(byte_arr);
-//                //RI
-//                ByteArrayOutputStream stream1 = new ByteArrayOutputStream();
-//                Bitmap bitmapR = ((BitmapDrawable)imageSelected1.getDrawable()).getBitmap();
-//                bitmapR.compress(Bitmap.CompressFormat.JPEG, 100, stream1);
-//                byte [] byte_arr_R = stream.toByteArray();
-                File file = new File(postPath);
-                File file1 = new File(postPath1);
-                byte[] probeImage=null;
-                byte [] candidateImage=null;
-                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-                    try {
-                       probeImage = Files.readAllBytes(file.toPath());
-                       candidateImage = Files.readAllBytes(file1.toPath());
-                    } catch (IOException e) {
-                        e.printStackTrace();
+                if (postPath != null && postPath1 != null) {
+                    result.setText("Recherche en cours...");
+                    File file = new File(postPath);
+                    File file1 = new File(postPath1);
+                    byte[] probeImage = null;
+                    byte[] candidateImage = null;
+                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                        try {
+                            probeImage = Files.readAllBytes(file.toPath());
+                            candidateImage = Files.readAllBytes(file1.toPath());
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
                     }
-                }
 
-                //CREATE TEMPLATE FOR THEM
-                FingerprintTemplate probe = helper.createTemplate(probeImage);
-                FingerprintTemplate candidate = helper.createTemplate(candidateImage);
-                if(helper.verifySingleFingerPrint(probe,candidate)){
-                    Toast.makeText(getApplicationContext(),"MATCH!!",Toast.LENGTH_LONG).show();
-                    result.setText("MATCH!!");
+                    //CREATE TEMPLATE FOR THEM
+                    FingerprintTemplate probe = helper.createTemplate(probeImage);
+                    FingerprintTemplate candidate = helper.createTemplate(candidateImage);
+                    if (helper.verifySingleFingerPrint(probe, candidate)) {
+                        Toast.makeText(getApplicationContext(), "MATCH!!", Toast.LENGTH_LONG).show();
+                        result.setText("MATCH!!");
+                    } else {
+                        Toast.makeText(getApplicationContext(), "NO MATCH FOUND!!", Toast.LENGTH_LONG).show();
+                        result.setText("NO MATCH FOUND!!");
+                    }
                 }else{
-                    Toast.makeText(getApplicationContext(),"NO MATCH FOUND!!",Toast.LENGTH_LONG).show();
-                    result.setText("NO MATCH FOUND!!");
+                    Toast.makeText(getApplicationContext(), "PLEASE SELECT THE IMAGES...", Toast.LENGTH_LONG).show();
                 }
             }
         });
-
         uploadImage = (Button) findViewById(R.id.btnUpload);
         uploadImage.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                uploadFile();
+                uploadFile(postPath);
+            }
+        });
+        btnBackUp.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                backupData.exportToSD();
+            }
+        });
+        btnRestoreDB.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                backupData.importFromSD();
             }
         });
     }
@@ -141,6 +155,22 @@ public class UploadImageToServer extends AppCompatActivity {
                 break;
         }
     }
+    //ALL FILES
+    private void showFileChooser() {
+        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+        intent.setType("*/*");
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+
+        try {
+            startActivityForResult(
+                    Intent.createChooser(intent, "Select a File to Upload"),
+                    PICK_PROFILE_IMAGE_REQUEST);
+        } catch (android.content.ActivityNotFoundException ex) {
+            // Potentially direct the user to the Market with a Dialog
+            Toast.makeText(this, "Please install a File Manager.",
+                    Toast.LENGTH_SHORT).show();
+        }
+    }
 
     protected void initDialog() {
 
@@ -148,13 +178,10 @@ public class UploadImageToServer extends AppCompatActivity {
         pDialog.setMessage("Loading....");
         pDialog.setCancelable(true);
     }
-
-
     protected void showpDialog() {
 
         if (!pDialog.isShowing()) pDialog.show();
     }
-
     protected void hidepDialog() {
 
         if (pDialog.isShowing()) pDialog.dismiss();
@@ -163,8 +190,9 @@ public class UploadImageToServer extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+        Log.d("FILES","DATA : "+data);
         if (resultCode == RESULT_OK) {
-            if (requestCode == PICK_PROFILE_IMAGE_REQUEST) {
+
                 if (data != null) {
                     // Get the Image from data
                     Uri selectedImage = data.getData();
@@ -176,23 +204,61 @@ public class UploadImageToServer extends AppCompatActivity {
 
                     int columnIndex = cursor.getColumnIndex(filePathColumn[0]);
                     mediaPath = cursor.getString(columnIndex);
-                    // Set the Image in ImageView for Previewing the Media
-                    if(imageViewClicked =="LI") {
-                        postPath = mediaPath;
-                        imageSelected.setImageBitmap(BitmapFactory.decodeFile(mediaPath));
+                    if (requestCode == 1) {
+                        // Set the Image in ImageView for Previewing the Media
+                        if (imageViewClicked == "LI") {
+                            postPath = mediaPath;
+                            imageSelected.setImageBitmap(BitmapFactory.decodeFile(mediaPath));
+                        } else {
+                            imageSelected1.setImageBitmap(BitmapFactory.decodeFile(mediaPath));
+                            postPath1 = mediaPath;
+                        }
                     }else{
-                        imageSelected1.setImageBitmap(BitmapFactory.decodeFile(mediaPath));
-                        postPath1 = mediaPath;
+                        // Get the Uri of the selected file
+                        Uri uri = data.getData();
+                        Log.d("FILES", "File Uri: " + uri.toString());
+                        // Get the path
+                        String path = null;
+                        try {
+                            path = getPath(this, uri);
+                        } catch (URISyntaxException e) {
+                            e.printStackTrace();
+                        }
+                        Log.d("FILES", "File Path: " + path);
+                        // Get the file instance
+                        // File file = new File(path);
+                        // Initiate the upload
+                        postPath = path;
                     }
                     cursor.close();
                 }
-            }
         }
         else if (resultCode != RESULT_CANCELED) {
             Toast.makeText(this, "Sorry, there was an error!", Toast.LENGTH_LONG).show();
         }
     }
 
+    public static String getPath(Context context, Uri uri) throws URISyntaxException {
+        if ("content".equalsIgnoreCase(uri.getScheme())) {
+            String[] projection = { "_data" };
+            Cursor cursor = null;
+
+            try {
+                cursor = context.getContentResolver().query(uri, projection, null, null, null);
+                int column_index = cursor.getColumnIndexOrThrow("_data");
+                if (cursor.moveToFirst()) {
+                    return cursor.getString(column_index);
+                }
+            } catch (Exception e) {
+                // Eat it
+            }
+        }
+        else if ("file".equalsIgnoreCase(uri.getScheme())) {
+            return uri.getPath();
+        }
+
+        return null;
+    }
     public byte[] getBytesImage(Bitmap bmp){
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         bmp.compress(Bitmap.CompressFormat.PNG,100, baos);
@@ -201,7 +267,7 @@ public class UploadImageToServer extends AppCompatActivity {
     }
 
     // Uploading Image/Video
-    private void uploadFile() {
+    private void uploadFile(String postPath) {
         if (postPath == null || postPath.equals("")) {
             Toast.makeText(this, "please select an image ", Toast.LENGTH_LONG).show();
             return;
@@ -236,10 +302,26 @@ public class UploadImageToServer extends AppCompatActivity {
                 @Override
                 public void onFailure(Call<ServerResponse> call, Throwable t) {
                     hidepDialog();
-                    Log.v("Response gotten is", t.getMessage());
+                    Log.d("Response gotten is", t.getMessage());
                 }
             });
         }
     }
 
+    @Override
+    public void onFinishExport(String error) {
+        if(error !=null) {
+            Toast.makeText(getApplicationContext(), error, Toast.LENGTH_SHORT).show();
+        }else{
+            Toast.makeText(getApplicationContext(), "BACKUP DONE....", Toast.LENGTH_SHORT).show();
+        }
+    }
+    @Override
+    public void onFinishImport(String error) {
+        if(error !=null) {
+            Toast.makeText(getApplicationContext(), error, Toast.LENGTH_SHORT).show();
+        }else{
+            Toast.makeText(getApplicationContext(), "BACKUP DONE....", Toast.LENGTH_SHORT).show();
+        }
+    }
 }

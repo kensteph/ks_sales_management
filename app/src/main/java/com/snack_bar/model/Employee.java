@@ -14,6 +14,9 @@ public class Employee implements Serializable {
         this.full_name = full_name;
     }
 
+    public Employee() {
+    }
+
     public Employee(int employee_id, int employee_entreprise, String employee_code, String employee_prenom, String employee_nom) {
         this.employee_id = employee_id;
         this.employee_entreprise = employee_entreprise;

@@ -90,7 +90,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 //startScan();
-                // FOR TEST
+                // FOR TEST 9A6060AF
                 Intent intent = new Intent(MainActivity.this, ProductsList.class);
                 intent.putExtra("EmployeeFullName","Ansderly RAMEAU | AR007-1");
                 intent.putExtra("EmployeeId",1);
@@ -222,8 +222,9 @@ public class MainActivity extends AppCompatActivity {
 
                // intent.putExtra("img", image);
                 fingerCaptured = image;
-                Employee match =  verifyFingerPrints();
-                if(match != null){
+                int matchId =  verifyFingerPrints();
+                if(matchId != 0){
+                    Employee match = db.getEmployeeInfo(matchId);
                     //Toast.makeText(getApplicationContext(),"Vous etes "+match.getEmployeeId(),Toast.LENGTH_LONG).show();
                     // Launch new intent instead of loading fragment
                     intent.putExtra("EmployeeFullName",match.getFull_name()+" | "+match.getEmployee_code());
@@ -242,15 +243,15 @@ public class MainActivity extends AppCompatActivity {
     };
 
     //VERIFY FINGER
-    private Employee verifyFingerPrints(){
-        Employee employee=null ;
+    private int verifyFingerPrints(){
+        int employeeId=0 ;
         if(fingerCaptured!= null){
             FingerprintTemplate fingerprintCapturedTemplate = helper.createTemplate(fingerCaptured);
-            employee = helper.verifyFingerPrint(fingerprintCapturedTemplate,listDbFingerPrints);
+            employeeId = helper.verifyFingerPrint(fingerprintCapturedTemplate,listDbFingerPrints);
         }else{
             Toast.makeText(getApplicationContext(),"Empreinte invalide...",Toast.LENGTH_LONG).show();
         }
-        return employee;
+        return employeeId;
     }
     //LOAD ALL THE FINGERPRINTS FROM DB
     public class LoadFingerPrintsFromDB extends AsyncTask<String,String,List<EmployeeFingerTemplate>> {

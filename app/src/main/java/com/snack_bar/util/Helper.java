@@ -1,5 +1,6 @@
 package com.snack_bar.util;
 
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
@@ -9,7 +10,6 @@ import com.machinezoo.sourceafis.FingerprintImage;
 import com.machinezoo.sourceafis.FingerprintMatcher;
 import com.machinezoo.sourceafis.FingerprintTemplate;
 import com.snack_bar.database.DatabaseHelper;
-import com.snack_bar.model.Employee;
 import com.snack_bar.model.EmployeeFingerTemplate;
 import com.snack_bar.model.FingerPrint;
 import com.snack_bar.network.ApiClient;
@@ -34,6 +34,14 @@ import retrofit2.Response;
 public  class Helper {
 private DatabaseHelper dbh;
 private Bitmap image;
+private Context context;
+
+    public Helper( Context context) {
+        this.context = context;
+    }
+
+    public Helper() {
+    }
 
     //CREATE TEMPLATE FOR COMPARISON
     public FingerprintTemplate createTemplate(byte[] byteImage){
@@ -43,7 +51,6 @@ private Bitmap image;
                     .decode(byteImage));
     return template;
     }
-
     //CREATE TEMPLATE AND SAVE IT IN DB FOR COMPARISON
     public byte[] serializedTemplate(byte[] byteImage){
         FingerprintTemplate template = new FingerprintTemplate(
@@ -53,7 +60,6 @@ private Bitmap image;
         byte[] serialized = template.toByteArray();
         return serialized;
     }
-
     //VERIFY 2 BYTES ARRAY
     public FingerPrint verifyBytesArray(byte[] probe, List<FingerPrint> candidates){
         FingerPrint found = null;
@@ -65,25 +71,23 @@ private Bitmap image;
         return found;
     }
     //FIND A FINGERPRINT AMONG ALL FINGERPRINTS
-    public Employee verifyFingerPrint(FingerprintTemplate probe, List<EmployeeFingerTemplate> candidates){
+    public int verifyFingerPrint(FingerprintTemplate probe, List<EmployeeFingerTemplate> candidates){
         FingerprintMatcher matcher = new FingerprintMatcher().index(probe);
         double high = 0;
-        Employee found = null;
+        int found = 0;
         for (EmployeeFingerTemplate candidate : candidates) {
             FingerprintTemplate fingerprintDB = new FingerprintTemplate(candidate.getFingerTemplate());
             double score = matcher.match(fingerprintDB);
             if (score > high) {
                 high = score;
                 //Get INFO ABOUT THE EMPLOYEE
-                Employee employee = dbh.getEmployeeInfo(candidate.getEmployeeId());
-                found = employee;
-                break;
+                found = candidate.getEmployeeId();
+                //break;
             }
         }
         double threshold = 40;
-        return high >= threshold ? found : null;
+        return high >= threshold ? found : 0;
     }
-
     //FIND A FINGERPRINT AMONG ALL FINGERPRINTS
     public boolean verifySingleFingerPrint(FingerprintTemplate probe,FingerprintTemplate candidate){
         FingerprintMatcher matcher = new FingerprintMatcher().index(probe);

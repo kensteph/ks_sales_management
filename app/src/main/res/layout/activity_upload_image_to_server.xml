@@ -52,5 +52,19 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:text="@string/hello_world" />
+            android:text="" />
+    <Button
+        android:id="@+id/btnBackupDB"
+        android:layout_marginTop="10dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:text="BACKUP FINGER PRINT" />
+    <Button
+        android:id="@+id/btnRestoreDB"
+        android:layout_marginTop="10dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:text="RESTORE FINGER PRINT" />
 </LinearLayout>

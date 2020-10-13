@@ -7,13 +7,13 @@
     tools:context=".ProductsList"
     android:orientation="vertical">
     <TextView
-        android:layout_marginTop="10dp"
+        android:layout_marginTop="15dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Votre Commande"
         android:textAlignment="center"
-        android:textSize="20dp"
-        android:textFontWeight="100"/>
+        android:textSize="25dp"
+        android:textFontWeight="1000"/>
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvOrders"
         android:layout_width="match_parent"

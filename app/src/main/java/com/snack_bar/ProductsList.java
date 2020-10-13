@@ -1,10 +1,5 @@
 package com.snack_bar;
 
-import androidx.appcompat.app.ActionBar;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.content.ContextCompat;
-import androidx.recyclerview.widget.GridLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.os.AsyncTask;
@@ -15,8 +10,15 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+
+import androidx.appcompat.app.ActionBar;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
+import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.snackbar.Snackbar;
 import com.snack_bar.adapter.OrderAdapter;
@@ -34,6 +36,8 @@ public class ProductsList extends AppCompatActivity implements ProductListAdapte
     //Holds the data that are added to cart
     private List<Order> orderList;
     RecyclerView recyclerView;
+    private Button saveOrderQuick;
+    private LinearLayout llBtnQuickSave;
     private TextView txtCount;
     private RelativeLayout rlCart;
     private ProgressDialog dialog;
@@ -67,6 +71,15 @@ public class ProductsList extends AppCompatActivity implements ProductListAdapte
         recyclerView.setLayoutManager(new GridLayoutManager(this,3));
         adapter = new ProductListAdapter(productList, this,ProductsList.this);
         recyclerView.setAdapter(adapter);
+        llBtnQuickSave = (LinearLayout) findViewById(R.id.llBtnQuickSave);
+        saveOrderQuick = (Button)  findViewById(R.id.btnSaveOrderQuick);
+        llBtnQuickSave.setVisibility(View.GONE);
+        saveOrderQuick.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                new SaveOrder().execute();
+            }
+        });
         //LOAD PRODUCT FROM DB
         new LoadProductsFromDB().execute();
        // dummyData();
@@ -186,14 +199,14 @@ Log.d("ADD ITEM","ITEM ADDED : "+quantity+" "+item.name);
         if (orderList.size() == 0)
         {
             txtCount.setVisibility(View.INVISIBLE);
-            //btnCompleteOrder.setVisibility(View.INVISIBLE);
+            llBtnQuickSave.setVisibility(View.INVISIBLE);
         } else
         {
             txtCount.setVisibility(View.VISIBLE);
             txtCount.setText(String.valueOf(orderList.size()));
-//            if(employeeSelectedID!=0) {
-//                btnCompleteOrder.setVisibility(View.VISIBLE);
-//            }
+            if(employeeSelectedID!=0) {
+                llBtnQuickSave.setVisibility(View.VISIBLE);
+            }
         }
     }
     private double getOrderTotal() {
@@ -216,6 +229,12 @@ Log.d("ADD ITEM","ITEM ADDED : "+quantity+" "+item.name);
         View view = getLayoutInflater().inflate(R.layout.cart_layout, null);
         final RecyclerView rvCart = view.findViewById(R.id.rvOrders);
         final Button btnSaveOrder = view.findViewById(R.id.btnSaveOrder);
+        if(orderList.size() == 0){
+            btnSaveOrder.setVisibility(View.GONE);
+            //dialog.dismiss();
+        }else{
+            btnSaveOrder.setVisibility(View.VISIBLE);
+        }
         rvCart.setHasFixedSize(true);
         rvCart.setLayoutManager(new GridLayoutManager(this,2));
         orderAdapter = new OrderAdapter(orderList,this,ProductsList.this);
@@ -228,7 +247,9 @@ Log.d("ADD ITEM","ITEM ADDED : "+quantity+" "+item.name);
             @Override
             public void onClick(View view) {
                 dialog.dismiss();
-                new SaveOrder().execute();
+                if(orderList.size()>0) {
+                    new SaveOrder().execute();
+                }
             }
         });
     }
@@ -245,7 +266,7 @@ Log.d("ADD ITEM","ITEM ADDED : "+quantity+" "+item.name);
         @Override
         protected void onPostExecute(final Boolean success) {
             showProgress("Traitement de la requete...",false);
-            clearAll();
+            //clearAll();
             showMessage(true,"Commande enregistrée avec succès...");
             if(success) {
                 finish();
