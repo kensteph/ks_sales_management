@@ -87,7 +87,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         this.context = context;
         helper=new Helper();
     }
-
     @Override
     public void onCreate(SQLiteDatabase sqLiteDatabase) {
         Log.d(TAG,"TRYING TO CREATE DATABASE....");
@@ -100,7 +99,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         sqLiteDatabase.execSQL(TB_PRODUCTS);
         Log.d(TAG,"DATABASE CREATED SUCCESSFULLY....");
     }
-
     @Override
     public void onUpgrade(SQLiteDatabase sqLiteDatabase, int i, int i1) {
         // Drop older table if existed
@@ -257,12 +255,12 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             //SALES DETAILS
             List<Order> details =getSaleDetails(saleId);
             Log.d("DB","DESCRIPTION : "+details.size());
-            String description="";
+            String description="------------------------------------------------\n";
             for(Order order : details){
                 Item product = order.item;
                 description+=""+order.quantity+" "+product.name+" "+product.unitPrice+"\n";
             }
-            description+="------------------------------------------------\n TOTAL : "+priceTotal;
+            description+="------------------------------------------------";
             //INFO EMPLOYEE
             String prenom = cursor2.getString(cursor2.getColumnIndexOrThrow("employe_prenom"));
             String nom = cursor2.getString(cursor2.getColumnIndexOrThrow("employe_nom"));

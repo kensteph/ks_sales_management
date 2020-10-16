@@ -268,6 +268,7 @@ public class UploadImageToServer extends AppCompatActivity implements BackupData
 
     // Uploading Image/Video
     private void uploadFile(String postPath) {
+
         if (postPath == null || postPath.equals("")) {
             Toast.makeText(this, "please select an image ", Toast.LENGTH_LONG).show();
             return;

@@ -89,12 +89,12 @@ public class MainActivity extends AppCompatActivity {
         buttonRetry.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                //startScan();
+                startScan();
                 // FOR TEST 9A6060AF
-                Intent intent = new Intent(MainActivity.this, ProductsList.class);
-                intent.putExtra("EmployeeFullName","Ansderly RAMEAU | AR007-1");
-                intent.putExtra("EmployeeId",1);
-                startActivity(intent);
+//                Intent intent = new Intent(MainActivity.this, ProductsList.class);
+//                intent.putExtra("EmployeeFullName","Ansderly RAMEAU | AR007-1");
+//                intent.putExtra("EmployeeId",1);
+//                startActivity(intent);
             }
         });
         //LOAD ALL FINGERPRINTS FROM DB
@@ -224,6 +224,7 @@ public class MainActivity extends AppCompatActivity {
                 fingerCaptured = image;
                 int matchId =  verifyFingerPrints();
                 if(matchId != 0){
+                    buttonRetry.setVisibility(View.GONE);
                     Employee match = db.getEmployeeInfo(matchId);
                     //Toast.makeText(getApplicationContext(),"Vous etes "+match.getEmployeeId(),Toast.LENGTH_LONG).show();
                     // Launch new intent instead of loading fragment
@@ -373,21 +374,18 @@ public class MainActivity extends AppCompatActivity {
                         Log.d("SERVER 1",data.getString("employe_prenom"));
                     }
 
-//                    //GET ALL FINGERPRINTS
-//                    JSONArray arraySub = jsonObject.getJSONArray("FingerPrints");
-//                    //EMPTY THE FINGERPRINTS TABLE
-//                    db.emptyTable("empreintes");
-//                    for (int i = 0; i < arraySub.length(); i++) {
-//                        JSONObject data = arraySub.getJSONObject(i);
-//                        int employeeId=data.getInt("employe_id");
-////                        String fingerPrint=data.getString("finger_print");
-////                        String template=data.getString("template");
-//                        byte[] fp = (byte[]) data.get("finger_print");
-//                        byte[] tp = (byte[]) data.get("template");
-//
-//                        db.saveFingerPrintsFromServer(employeeId,fp,tp);
-//                        Log.d("SERVER 2","EMPLOYE ID : "+employeeId);
-//                    }
+                    //GET ALL FINGERPRINTS
+                    JSONArray arraySub = jsonObject.getJSONArray("FingerPrints");
+                    //EMPTY THE FINGERPRINTS TABLE
+                    db.emptyTable("empreintes");
+                    for (int i = 0; i < arraySub.length(); i++) {
+                        JSONObject data = arraySub.getJSONObject(i);
+                        int employeeId=data.getInt("employe_id");
+                        byte[] fp =helper.base64ToByteArray(data.getString("finger_print"));
+                        byte[] tp = helper.base64ToByteArray(data.getString("template"));
+                        db.saveFingerPrintsFromServer(employeeId,fp,tp);
+                        Log.d("SERVER 2","EMPLOYE ID : "+employeeId);
+                    }
 
                     showProgress("",false);
                     showMessage(true, "Synchronisation terminée...");

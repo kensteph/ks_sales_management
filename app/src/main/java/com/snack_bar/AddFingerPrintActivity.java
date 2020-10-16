@@ -113,7 +113,7 @@ public class AddFingerPrintActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 buttonAddFingerprint.setVisibility(View.GONE);
-                saveFingerPrintTo("LOCAL");
+                saveFingerPrintTo("SERVER");
             }
         });
 
@@ -285,14 +285,19 @@ public class AddFingerPrintActivity extends AppCompatActivity {
 
             JSONArray array = new JSONArray();
             for (byte[] fp : employeeFingers) {
+                String encodedTemplate ="";
+                String encodedFinger ="";
                 try {
                     //LEFT FINGER 1
                     JSONObject obj = new JSONObject();
                     byte[] serializeTemplate = helper.serializedTemplate(fp);
+                    //CONVERT THE TEMPLATE TO BASE64
+                    encodedTemplate = helper.byteArrayToBase64(serializeTemplate);
+                    encodedFinger = helper.byteArrayToBase64(fp);
                     obj.put("EmployeeId", selectedEmployeeID);
                     obj.put("Finger", "");
-                    obj.put("FingerPrint", fp);
-                    obj.put("FingerPrintTemplate", serializeTemplate);
+                    obj.put("FingerPrint", encodedFinger);
+                    obj.put("FingerPrintTemplate", encodedTemplate);
                     array.put(obj);
 
 

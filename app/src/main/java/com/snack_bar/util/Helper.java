@@ -135,6 +135,22 @@ private Context context;
      return image;
     }
 
+    public String byteArrayToBase64(byte[] arrayBytes){
+        String imageString = null;
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            imageString = Base64.getEncoder().encodeToString(arrayBytes);
+        }
+        return  imageString;
+    }
+
+    public byte[] base64ToByteArray(String imageString ){
+        byte[] arrayBytes = null;
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            arrayBytes = Base64.getDecoder().decode(imageString);
+        }
+        return  arrayBytes;
+    }
+
     public class AsyncTaskLoadImage  extends AsyncTask<String, String, Bitmap> {
         private final static String TAG = "AsyncTaskLoadImage";
         private String URL;
