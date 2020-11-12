@@ -21,6 +21,7 @@ import com.snack_bar.model.Order;
 import com.snack_bar.model.SaleItemListModel;
 import com.snack_bar.network.ApiClient;
 import com.snack_bar.network.ApiInterface;
+import com.snack_bar.util.Helper;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -38,7 +39,7 @@ public class SalesListActivity extends AppCompatActivity {
     DatabaseHelper databaseHelper;
     private ProgressDialog dialog;
     private Button btnSynchronizeSales;
-
+    private Helper helper;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -47,6 +48,7 @@ public class SalesListActivity extends AppCompatActivity {
         btnSynchronizeSales = findViewById(R.id.btnSynchronizeSales);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         databaseHelper=new DatabaseHelper(this);
+        helper = new Helper();
         salesList = new ArrayList<>();
         saleListAdapter = new SaleListAdapter(salesList,getBaseContext());
         recyclerView.setAdapter(saleListAdapter);
@@ -94,7 +96,8 @@ public class SalesListActivity extends AppCompatActivity {
             //salesList =saleItemListModels;
             for(SaleItemListModel slm : saleItemListModels){
                 salesList.add(slm);
-                Log.d("SALES",""+slm.isExpandable());
+                //String json = helper.toJSON(slm);
+                //Log.d("SALES JSON",""+json);
             }
             saleListAdapter.notifyDataSetChanged();
             int nbSales =salesList.size();
@@ -164,7 +167,7 @@ public class SalesListActivity extends AppCompatActivity {
             @Override
             public void onFailure(Call<JsonObject> call, Throwable t) {
                 showProgress("Synchronisation des ventes terminée.....",false);
-                Toast.makeText(getApplicationContext(), t.toString(), Toast.LENGTH_LONG).show();
+                Toast.makeText(getApplicationContext(), t.toString()+" | "+call.toString(), Toast.LENGTH_LONG).show();
                 Log.d("SERVER",t.toString());
             }
 
@@ -177,7 +180,8 @@ public class SalesListActivity extends AppCompatActivity {
         {
             JSONObject obj = new JSONObject();
             try {
-                obj.put("SaleId", sale.getSaleId());
+                int saleID = sale.getSaleId();
+                obj.put("SaleId", saleID);
                 obj.put("SaleDate", sale.getSaleDate());
                 obj.put("EmployeeId", sale.getEmployee());
                 obj.put("SellerId", sale.getCashier());
@@ -185,11 +189,13 @@ public class SalesListActivity extends AppCompatActivity {
                 obj.put("MaterialId", sale.getMaterialId());
                 //DETAILS
                 List<Order> listItems=sale.getItem();
-                JSONObject Orderdetails = new JSONObject();
                 JSONArray arrayDetails = new JSONArray();
+
                 for(Order line : listItems) {
+                    JSONObject Orderdetails = new JSONObject();
                     double unitPrice=line.item.unitPrice;
                     int productId=line.item.id;
+                    //Log.d("SERVER","SALE ID : "+sale.getSaleId()+" PRODUCT ID : "+productId);
                     Orderdetails.put("VenteId",sale.getSaleId());
                     Orderdetails.put("MaterielId",sale.getMaterialId());
                     Orderdetails.put("EmployeId",sale.getEmployee());
@@ -200,6 +206,7 @@ public class SalesListActivity extends AppCompatActivity {
                     Orderdetails.put("DateVente",sale.getSaleDate());
                     arrayDetails.put(Orderdetails);
                 }
+                Log.d("SERVER","SALE ID : "+saleID +" | "+arrayDetails);
                 obj.put("Details",arrayDetails);
                 array.put(obj);
             } catch (JSONException e) {

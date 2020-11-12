@@ -53,5 +53,7 @@ dependencies {
     //COMPARISON FINGER PRINT
     implementation 'com.machinezoo.sourceafis:sourceafis:3.11.0'
     implementation 'de.hdodenhof:circleimageview:2.1.0'
+    //QR CODE
+    implementation 'com.gpfreetech:AwesomeCodeScanner:1.1'
 
 }

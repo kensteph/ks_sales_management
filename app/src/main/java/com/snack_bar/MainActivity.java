@@ -4,6 +4,7 @@ import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Build;
@@ -63,6 +64,9 @@ public class MainActivity extends AppCompatActivity {
     private ArrayList<Item> productsList;
     //Holds all Employees
     private ArrayList<Employee> employeesList;
+    private static final String SHARED_PREF_NAME = "MY_SHARED_PREFERENCES";
+    SharedPreferences sp;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -81,6 +85,13 @@ public class MainActivity extends AppCompatActivity {
         listDbFingerPrints = new ArrayList<EmployeeFingerTemplate>();
         productsList = new ArrayList<Item>();
         employeesList = new ArrayList<Employee>();
+        //LAUNCH LOGIN ACTIVITY
+        sp = getSharedPreferences(SHARED_PREF_NAME, MODE_PRIVATE);
+        Boolean isLogin = sp.getBoolean("isLogin", false);
+        if(!isLogin){
+            Intent intent = new Intent(MainActivity.this, LoginActivity.class);
+            startActivity(intent);
+        }
         //LOAD COMPONENTS
         tvStatus = (TextView) findViewById(R.id.tvStatus);
         tvError = (TextView) findViewById(R.id.tvError);
@@ -89,12 +100,12 @@ public class MainActivity extends AppCompatActivity {
         buttonRetry.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                startScan();
+               // startScan();
                 // FOR TEST 9A6060AF
-//                Intent intent = new Intent(MainActivity.this, ProductsList.class);
-//                intent.putExtra("EmployeeFullName","Ansderly RAMEAU | AR007-1");
-//                intent.putExtra("EmployeeId",1);
-//                startActivity(intent);
+                Intent intent = new Intent(MainActivity.this, ProductsList.class);
+                intent.putExtra("EmployeeFullName","Ansderly RAMEAU | AR007-1");
+                intent.putExtra("EmployeeId",1);
+                startActivity(intent);
             }
         });
         //LOAD ALL FINGERPRINTS FROM DB
@@ -132,7 +143,15 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(new Intent(MainActivity.this, SalesListActivity.class));
                 return true;
             case R.id.manage_finger:
-                startActivity(new Intent(MainActivity.this, UploadImageToServer.class));
+                startActivity(new Intent(MainActivity.this, SyncFingerPrintToServer.class));
+                return true;
+            case R.id.LogOut:
+                SharedPreferences.Editor editor = sp.edit();
+                editor.putBoolean("isLogin", false);
+                editor.apply();
+                intent = new Intent(MainActivity.this, LoginActivity.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                startActivity(intent);
                 return true;
 
         }
@@ -191,7 +210,6 @@ public class MainActivity extends AppCompatActivity {
                     break;
                 case Status.SUCCESS:
                     tvStatus.setText("Fingerprint successfully captured");
-                    buttonRetry.setVisibility(View.GONE);
                     break;
                 case Status.ERROR:
                     tvStatus.setText("Error");
@@ -355,7 +373,7 @@ public class MainActivity extends AppCompatActivity {
     private void getEmployees(){
         ApiInterface apiService =
                 ApiClient.getClient().create(ApiInterface.class);
-        Call<JsonObject> call = apiService.getAllEmployees();
+        Call<JsonObject> call = apiService.getAllEmployees("All");
         call.enqueue(new Callback<JsonObject>() {
             @Override
             public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {

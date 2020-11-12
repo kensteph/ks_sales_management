@@ -10,6 +10,7 @@ import android.util.Log;
 import com.snack_bar.model.Employee;
 import com.snack_bar.model.EmployeeFingerTemplate;
 import com.snack_bar.model.FingerPrint;
+import com.snack_bar.model.FingerPrintTemp;
 import com.snack_bar.model.Item;
 import com.snack_bar.model.Order;
 import com.snack_bar.model.SaleItemListModel;
@@ -33,6 +34,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String TABLE_SALES_DETAILS = "sale_details";
     private static final String TABLE_EMPLOYEES = "employes";
     private static final String TABLE_FINGERPRINTS = "empreintes";
+    private static final String TABLE_FINGERPRINTS_TMP = "empreintes_tmp";
 
     //SCRIPT
     String TB_CATEGORIES= "CREATE TABLE categories(" +
@@ -81,6 +83,13 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                     "        empreinte TEXT," +
                     "        template TEXT," +
                     "        create_at DATETIME DEFAULT CURRENT_TIMESTAMP);";
+    String TB_FINGERPRINTS_TMP=
+            "        CREATE TABLE empreintes_tmp(" +
+                    "        id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                    "        employe_id INTEGER," +
+                    "        empreinte TEXT," +
+                    "        template TEXT," +
+                    "        create_at DATETIME DEFAULT CURRENT_TIMESTAMP);";
 
     public DatabaseHelper(Context context) {
         super(context, databaseName, null, databaseVersion);
@@ -97,6 +106,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         sqLiteDatabase.execSQL(TB_CATEGORIES);
         sqLiteDatabase.execSQL(TB_SUBCATEGORIES);
         sqLiteDatabase.execSQL(TB_PRODUCTS);
+        sqLiteDatabase.execSQL(TB_FINGERPRINTS_TMP);
         Log.d(TAG,"DATABASE CREATED SUCCESSFULLY....");
     }
     @Override
@@ -108,6 +118,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         sqLiteDatabase.execSQL("DROP TABLE IF EXISTS sub_categories");
         sqLiteDatabase.execSQL("DROP TABLE IF EXISTS employes");
         sqLiteDatabase.execSQL("DROP TABLE IF EXISTS empreintes");
+        sqLiteDatabase.execSQL("DROP TABLE IF EXISTS empreintes_tmp");
         sqLiteDatabase.execSQL("DROP TABLE IF EXISTS products");
         onCreate(sqLiteDatabase);
     }
@@ -332,6 +343,52 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.close();
         return rep;
     }
+    //ADD FINGERPRINT FOR EMPLOYEE IN TB_FINGERPRINTS_TMP
+    public boolean addTemporaryFingerPrint(List<FingerPrintTemp> fingerprints) {
+        boolean rep=false;
+        SQLiteDatabase db = this.getWritableDatabase();
+        db.beginTransaction();
+        try {
+            for (FingerPrintTemp fp : fingerprints) {
+                ContentValues values = new ContentValues();
+                values.put("employe_id", fp.getEmployeeId());
+                values.put("empreinte", fp.getFingerPrintImageBase64());
+                values.put("template", fp.getFingerPrintTemplateBase64());
+                db.insert(TABLE_FINGERPRINTS_TMP, null, values);
+            }
+            db.setTransactionSuccessful();
+            rep = true;
+        } finally {
+            db.endTransaction();
+            db.close();
+        }
+        return rep;
+    }
+    //FINGERPRINTS COUNT TO SYNC
+    public int getFingerCount() {
+        SQLiteDatabase db = this.getWritableDatabase();
+        String selectQuery ="SELECT COUNT(*) as tot FROM empreintes_tmp ";
+        Cursor cursor2 = db.rawQuery(selectQuery, null);
+        int nb=0;
+        if(cursor2.moveToNext()) {
+            nb = cursor2.getInt(cursor2.getColumnIndexOrThrow("tot"));
+        }
+
+        cursor2.close();
+        db.close();
+        return nb;
+    }
+    //GET SALES DESCRIPTION
+    public boolean deleteTemporaryFingerPrints(int employeeId) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        boolean done=false;
+        String query="DELETE FROM empreintes_tmp WHERE employe_id="+employeeId;
+        db.execSQL(query);
+        Log.d("DB",query);
+        done=true;
+        db.close();
+        return done;
+    }
     //GET INFO EMPLOYEE
     public List<FingerPrint> getAllFingersPrintsFromDB() {
         SQLiteDatabase db = this.getWritableDatabase();
@@ -360,6 +417,26 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
     //GET ALL EMPLOYEES FROM THE DB
     public List<Employee> getAllEmployeesFromDB() {
+        SQLiteDatabase db = this.getWritableDatabase();
+        List<Employee> employeeList = new ArrayList<Employee>(); // Create an ArrayList object
+        String query="SELECT * FROM employes";
+        Cursor cursor2 = db.rawQuery(query, null);
+        while(cursor2.moveToNext()) {
+            String prenom = cursor2.getString(cursor2.getColumnIndexOrThrow("employe_prenom"));
+            String nom = cursor2.getString(cursor2.getColumnIndexOrThrow("employe_nom"));
+            String code = cursor2.getString(cursor2.getColumnIndexOrThrow("employe_code"));
+            int idEmp = cursor2.getInt(cursor2.getColumnIndexOrThrow("employe_id"));
+            int entreprise_id = cursor2.getInt(cursor2.getColumnIndexOrThrow("entreprise_id"));
+            Employee employee = new Employee(idEmp,entreprise_id,code,prenom,nom);
+            employeeList.add(employee);
+        }
+        Log.d("EMPLOYEE DATA","FOUND : "+employeeList.size());
+        cursor2.close();
+        db.close();
+        return employeeList;
+    }
+    //GET ALL EMPLOYEES WITH NO FINGER PRINTS FROM THE DB
+    public List<Employee> getEmployeesWithNoFingerPrintsFromDB() {
         SQLiteDatabase db = this.getWritableDatabase();
         List<Employee> employeeList = new ArrayList<Employee>(); // Create an ArrayList object
         String query="SELECT * FROM employes";
@@ -413,6 +490,28 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         cursor2.close();
         db.close();
         return fingerPrintTemplates;
+    }
+
+    //GET TEMPORARY FINGERPRINTS IN DB
+    public List<FingerPrintTemp> getTemporaryFingers() {
+        SQLiteDatabase db = this.getWritableDatabase();
+        List<FingerPrintTemp> fingerPrintTmp = new ArrayList<>(); // Create an ArrayList object
+        String query="SELECT * FROM empreintes_tmp";
+        Cursor cursor2 = db.rawQuery(query, null);
+        while(cursor2.moveToNext()) {
+            String templateBase64 = cursor2.getString(cursor2.getColumnIndexOrThrow("template"));
+            String fingerPrintImageBase64 = cursor2.getString(cursor2.getColumnIndexOrThrow("empreinte"));
+            int employeeId = cursor2.getInt(cursor2.getColumnIndexOrThrow("employe_id"));
+            FingerPrintTemp fp = new FingerPrintTemp();
+            fp.setEmployeeId(employeeId);
+            fp.setFingerPrintTemplateBase64(templateBase64);
+            fp.setFingerPrintImageBase64(fingerPrintImageBase64);
+            fingerPrintTmp.add(fp);
+        }
+        Log.d("FINGERPRINT1","FOUND : "+fingerPrintTmp.size());
+        cursor2.close();
+        db.close();
+        return fingerPrintTmp;
     }
 
 }

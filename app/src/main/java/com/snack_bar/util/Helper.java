@@ -6,6 +6,7 @@ import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.util.Log;
 
+import com.google.gson.Gson;
 import com.machinezoo.sourceafis.FingerprintImage;
 import com.machinezoo.sourceafis.FingerprintMatcher;
 import com.machinezoo.sourceafis.FingerprintTemplate;
@@ -36,11 +37,17 @@ private DatabaseHelper dbh;
 private Bitmap image;
 private Context context;
 
+
     public Helper( Context context) {
         this.context = context;
     }
 
     public Helper() {
+    }
+    //CONVERT OBJECT TO JSON
+    public String toJSON(Object object){
+        Gson gson = new Gson();
+        return gson.toJson(object);
     }
 
     //CREATE TEMPLATE FOR COMPARISON

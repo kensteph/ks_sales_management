@@ -1,4 +1,5 @@
 package com.snack_bar.network;
+
 import com.google.gson.JsonObject;
 
 import java.util.Map;
@@ -14,12 +15,13 @@ import retrofit2.http.Multipart;
 import retrofit2.http.POST;
 import retrofit2.http.Part;
 import retrofit2.http.PartMap;
+import retrofit2.http.Query;
 
 public interface ApiInterface {
     @GET("products/")
     Call<JsonObject> getAllProducts();
     @GET("employees/")
-    Call<JsonObject> getAllEmployees();
+    Call<JsonObject> getAllEmployees(@Query("TypeEmployee") String TypeEmployee);
     @FormUrlEncoded
     @POST("sales/")
     Call<JsonObject> UploadSaleToServer(@Field("data") String json);
@@ -35,5 +37,9 @@ public interface ApiInterface {
             @Header("Authorization") String authorization,
             @PartMap Map<String, RequestBody> map
     );
+
+    @FormUrlEncoded
+    @POST("employees/finger_prints/")
+    Call<String> UploadFingerPrints(@Field("data") String json);
 
 }
