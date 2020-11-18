@@ -1,20 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <item android:title="Synchronisation Produits"
+    <item android:title="Sync Products"
     android:id="@+id/sync_products"
     android:icon="@drawable/ic_sync_24" />
-<item android:title="Synchronisation Employés"
+<item android:title="Sync Employees"
     android:id="@+id/sync_employees"
     android:icon="@drawable/ic_sync_24" />
 
-    <item android:title="Liste des Employés"
+    <item android:title="Employees"
         android:id="@+id/list_employees"
         android:icon="@drawable/ic_sync_24" />
-    <item android:title="Liste des ventes"
+    <item android:title="Sales"
         android:id="@+id/list_sales"
         android:icon="@drawable/ic_sync_24" />
-    <item android:title="Manage Fingerprint"
+    <item android:title="Fingerprints"
         android:id="@+id/manage_finger"
         android:icon="@drawable/ic_sync_24" />
     <item android:title="Logout"

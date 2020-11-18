@@ -77,7 +77,7 @@ public class MainActivity extends AppCompatActivity {
         ActionBar actionBar = getSupportActionBar();
         actionBar.setHomeButtonEnabled(false);
         actionBar.setDisplayHomeAsUpEnabled(false);
-        actionBar.setTitle("KSSM");
+        actionBar.setTitle("Point Of Sale");
         //HELPER
         helper = new Helper();
         //DATABASE
@@ -291,7 +291,7 @@ public class MainActivity extends AppCompatActivity {
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
-            showProgress("Initialisation du système...",true);
+            showProgress("Please wait....",true);
         }
 
         @Override
@@ -300,7 +300,7 @@ public class MainActivity extends AppCompatActivity {
             listDbFingerPrints = fingerPrints;
             Log.d("FINGERPRINT2","FOUND : "+listDbFingerPrints.size());
             //tvStatus.setText("QTY FINGERPRINTS" +" : "+listDbFingerPrints.size());
-            showProgress("Pret!",false);
+            showProgress("Ready!",false);
         }
     }
     private void showProgress(String msg,boolean show) {
@@ -336,6 +336,7 @@ public class MainActivity extends AppCompatActivity {
     //LOAD DATA FROM SERVER
     //GET ALL THE PRODUCTS
     private void getAllProducts(){
+        showProgress("Products Synchronization starts...",true);
         ApiInterface apiService =
                 ApiClient.getClient().create(ApiInterface.class);
         Log.d("CREDENTIALS",Email+" | "+Password);
@@ -365,7 +366,7 @@ public class MainActivity extends AppCompatActivity {
                         Log.d("SERVER 3",productDESC);
                     }
                     showProgress("",false);
-                    showMessage(true, "Synchronisation terminée...");
+                    showMessage(true, "Synchronization complete...");
 //                    Intent intent = getIntent();
 //                    finish();
 //                    startActivity(intent);
@@ -388,6 +389,7 @@ public class MainActivity extends AppCompatActivity {
 
     //GET ALL THE EMPLOYEES REFERENCES
     private void getEmployeesReferences(){
+        showProgress("Employee Synchronization starts...",true);
         ApiInterface apiService =
                 ApiClient.getClient().create(ApiInterface.class);
         Call<JsonObject> call = apiService.getEmployeesReferences(Email,Password);
@@ -473,7 +475,7 @@ public class MainActivity extends AppCompatActivity {
 //
 
                     showProgress("",false);
-                    showMessage(true, "Synchronisation terminée...");
+                    showMessage(true, "Synchronization complete...");
                 } catch (JSONException e) {
                     e.printStackTrace();
                    Log.d("SERVER ERR",e.toString());
@@ -556,13 +558,12 @@ public class MainActivity extends AppCompatActivity {
             builder = new AlertDialog.Builder(MainActivity.this);
         }
         builder.setCancelable(false);
-        builder.setTitle("Synchronisation des produits")
-                .setMessage("Voulez-vous supprimer et remplacer les produits de la base de données locale?")
+        builder.setTitle("Sync Products")
+                .setMessage("Do you really want to SYNC PRODUCTS?")
                 .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener()
                 {
                     public void onClick(DialogInterface dialog, int which)
                     {
-                        showProgress("Synchronisation des produits...",true);
                         getAllProducts();//Get Products fom server
                     }
                 })
@@ -586,13 +587,12 @@ public class MainActivity extends AppCompatActivity {
             builder = new AlertDialog.Builder(MainActivity.this);
         }
         builder.setCancelable(false);
-        builder.setTitle("Synchronisation des employés")
-                .setMessage("Voulez-vous supprimer et remplacer les employés de la base de données locale?")
+        builder.setTitle("Sync Employee")
+                .setMessage("Do you really want to SYNC EMPLOYEES?")
                 .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener()
                 {
                     public void onClick(DialogInterface dialog, int which)
                     {
-                        showProgress("Synchronisation des employés...",true);
                         getEmployeesReferences();
                         //getEmployees();//Get Products fom server
                     }

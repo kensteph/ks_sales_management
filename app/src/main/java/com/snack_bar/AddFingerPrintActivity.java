@@ -325,17 +325,17 @@ public class AddFingerPrintActivity extends AppCompatActivity {
             //SAVE THE INFO TO DB
             if(db.addTemporaryFingerPrint(temporaryList)){
                 showProgress("Saving FingerPrints....",false);
-                Toast.makeText(getApplicationContext(), "Empreintes ajoutés avec succès.... ", Toast.LENGTH_LONG).show();
+                Toast.makeText(getApplicationContext(), "Fingerprints added successfully.... ", Toast.LENGTH_LONG).show();
                 finish();
             }else{
                 showProgress("Saving FingerPrints....",false);
-                Toast.makeText(getApplicationContext(), "Echec lors de la sauvegarde des emprentes...", Toast.LENGTH_LONG).show();
+                Toast.makeText(getApplicationContext(), "Failed to save Fingerprints...", Toast.LENGTH_LONG).show();
                 buttonAddFingerprint.setVisibility(View.VISIBLE);
             }
 
         }else{
             showProgress("Saving FingerPrints....",false);
-            Toast.makeText(getApplicationContext(),"Veuillez prendre toutes les Empreintes...",Toast.LENGTH_LONG).show();
+            Toast.makeText(getApplicationContext(),"Please provide all the Fingerprints...",Toast.LENGTH_LONG).show();
             buttonAddFingerprint.setVisibility(View.VISIBLE);
         }
     }

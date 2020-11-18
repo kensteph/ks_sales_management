@@ -31,7 +31,7 @@
             android:textAlignment="center"
             android:textSize="40dp"
             android:fontFamily="sans-serif-condensed-medium"
-            android:text="Nouvelle Vente"
+            android:text="New Sale"
             />
         <TextView
             android:id="@+id/tvStatus"
@@ -57,7 +57,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:layout_marginTop="20dp"
-            android:text="Réessayer"
+            android:text="Retry"
             />
 
     </LinearLayout>

@@ -10,9 +10,11 @@ import android.view.View;
 import android.widget.Button;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.snackbar.Snackbar;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.snack_bar.adapter.SaleListAdapter;
@@ -112,15 +114,13 @@ public class SalesListActivity extends AppCompatActivity {
             //salesList =saleItemListModels;
             for(SaleItemListModel slm : saleItemListModels){
                 salesList.add(slm);
-                //String json = helper.toJSON(slm);
-                //Log.d("SALES JSON",""+json);
             }
             saleListAdapter.notifyDataSetChanged();
             int nbSales =salesList.size();
             if(nbSales>0){
-                btnSynchronizeSales.setText("Synchroniser les "+nbSales+" ventes");
+                btnSynchronizeSales.setText(nbSales+" sales to sync");
             }else{
-                btnSynchronizeSales.setText("Aucune vente à synchroniser");
+                btnSynchronizeSales.setText("No sale to sync");
             }
 
         }
@@ -141,6 +141,20 @@ public class SalesListActivity extends AppCompatActivity {
         {
             dialog.dismiss();
         }
+    }
+    //Shows a message by using Snackbar
+    private void showMessage(Boolean isSuccessful, String message) {
+        Snackbar snackbar = Snackbar.make(findViewById(android.R.id.content), message, Snackbar.LENGTH_LONG);
+
+        if (isSuccessful)
+        {
+            snackbar.getView().setBackgroundColor(ContextCompat.getColor(SalesListActivity.this, R.color.colorAccent));
+        } else
+        {
+            snackbar.getView().setBackgroundColor(ContextCompat.getColor(SalesListActivity.this, R.color.design_default_color_error));
+        }
+
+        snackbar.show();
     }
     //UPLOAD SALES
 //    private void postSale(JsonObject data) {
@@ -266,13 +280,12 @@ public class SalesListActivity extends AppCompatActivity {
         postDataToServer(obj);
 
     }
-
     private void postDataToServer(JsonObject obj){
         // Using the Retrofit
         ApiInterface apiService =
                 ApiClient.getClient().create(ApiInterface.class);
         Call<JsonObject> call = apiService.postSales (obj);
-        showProgress("Sales Synchronisation start....",true);
+        showProgress("Sales Synchronization start....",true);
         call.enqueue(new Callback<JsonObject>() {
 
             @Override
@@ -286,6 +299,7 @@ public class SalesListActivity extends AppCompatActivity {
                        Log.e("response-success", jsonObject.getString("Accepted"));
                    }else{
                        Log.e("response-failed","SALE DETAILS DON'T SAVE");
+                       showMessage(false,"SALE DETAILS DON'T SAVE");
                    }
 
 
@@ -308,8 +322,9 @@ public class SalesListActivity extends AppCompatActivity {
 
             @Override
             public void onFailure(Call<JsonObject> call, Throwable t) {
+                showMessage(false,"PLEASE VERIFY YOUR NETWORK CONNECTION...");
                 Log.e("response-failure", call.toString());
-                showProgress("Sales Synchronisation done.",false);
+                showProgress("Sales Synchronization complete.",false);
                 //nbFp.setText("Une erreur est survenue.Reessayez");
             }
 

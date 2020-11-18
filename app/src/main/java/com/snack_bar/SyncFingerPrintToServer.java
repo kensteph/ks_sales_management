@@ -61,7 +61,7 @@ private String Password;
         temporaryFingerPrints = new ArrayList<>();
         temporaryFingerPrints = db.getTemporaryFingers();
         nbFp = (TextView) findViewById(R.id.nbFpSync);
-        nbFp.setText(nbFingerPrintsToSync+" Empreintes à synchroniser");
+        nbFp.setText(nbFingerPrintsToSync+" Fingerprints to sync");
 
         btnSynchronizeFingerPrints = findViewById(R.id.btnSynchronizeFingerPrints);
         if(nbFingerPrintsToSync==0){
@@ -151,7 +151,6 @@ private String Password;
 
         });
     }
-
     //PREPARE DATA TO SENT
     private void saveFingerPrintsToServer(List<FingerPrintTemp> listFingerPrints){
         int pos=1;
@@ -161,31 +160,27 @@ private String Password;
             pos++;
         }
     }
-
-    //TEST SERVER
+    //SERVER SIDE
     private void testSendFingerPrintToServer(FingerPrintTemp fpT,int pos){
         JsonObject login = new JsonObject();
         JsonObject obj = new JsonObject();
             login.addProperty ("Email",Email);
             login.addProperty("Password",Password);
             obj.addProperty("EmployeId", 3);
-            obj.addProperty("Finger", "RTF");
+            obj.addProperty("Finger", fpT.getFinger());
             obj.addProperty("FingerPrint",fpT.getFingerPrintImageBase64());
             obj.addProperty("Template", fpT.getFingerPrintTemplateBase64());
             obj.add("Login",login);
             String data = obj.toString();
             //Log.d("SERVER", "JSON : " + data);
            postDataToServer(obj,pos);
-
-
     }
-
     private void postDataToServer(JsonObject obj,int pos){
         // Using the Retrofit
         ApiInterface apiService =
                 ApiClient.getClient().create(ApiInterface.class);
         Call<JsonObject> call = apiService.postFingerPrint (obj);
-        showProgress("Synchronisation des empreintes ",true);
+        showProgress("Fingerprints Synchronization starts.. ",true);
         call.enqueue(new Callback<JsonObject>() {
 
             @Override
@@ -193,8 +188,8 @@ private String Password;
                 try{
                     Log.e("response-success", response.body().toString());
                     if(pos==temporaryFingerPrints.size()){
-                        showProgress("Synchronisation des empreintes terminée.",false);
-                        nbFp.setText("Synchronisation des empreintes terminée");
+                        showProgress("Fingerprints Synchronization complete.",false);
+                        nbFp.setText("Fingerprints Synchronization complete");
                         btnSynchronizeFingerPrints.setVisibility(View.INVISIBLE);
                     }
                 }catch (Exception e){
@@ -205,8 +200,8 @@ private String Password;
             @Override
             public void onFailure(Call<JsonObject> call, Throwable t) {
                 Log.e("response-failure", call.toString());
-                showProgress("Synchronisation des empreintes terminée.",false);
-                nbFp.setText("Une erreur est survenue.Reessayez");
+                showProgress("Fingerprints Synchronization complete.",false);
+                nbFp.setText("Verify your internet connection and retry....");
             }
 
         });
