@@ -62,35 +62,8 @@
         android:layout_width="50dp"
         android:layout_height="50dp"
         android:src="@drawable/ic_baseline_qr_code_scanner_24"/>
-    <com.gpfreetech.awesomescanner.ui.ScannerView
-        android:id="@+id/scanner_view"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_weight=".3"
-        app:autoFocusButtonColor="@android:color/white"
-        app:autoFocusButtonVisible="true"
-        app:flashButtonColor="@android:color/white"
-        app:flashButtonVisible="true"
-        app:frameAspectRatioHeight="1"
-        app:frameAspectRatioWidth="1"
-        app:frameColor="@android:color/white"
-        app:frameCornersRadius="0dp"
-        app:frameCornersSize="50dp"
-        app:frameSize="0.70"
-        app:frameThickness="5dp"
-        app:maskColor="#77000000"
-        app:isAnimated="true"/>
 </LinearLayout>
 
-                <EditText
-                    android:id="@+id/server"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="10dp"
-                    android:hint="Server"
-                    android:maxLines="1"
-                    android:paddingStart="5dp"
-                    android:singleLine="true"/>
                 <Button
                     android:id="@+id/login"
                     android:layout_width="match_parent"
@@ -114,6 +87,6 @@
         android:layout_marginTop="-50dp"
         android:background="@drawable/round_background"
         android:padding="15dp"
-        android:src="@drawable/ic_baseline_fingerprint_24"/>
+        android:src="@drawable/ic_baseline_account_circle_24"/>
 
 </RelativeLayout>

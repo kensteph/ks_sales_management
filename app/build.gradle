@@ -48,12 +48,13 @@ dependencies {
     implementation 'com.google.code.gson:gson:2.6.2'
     implementation 'com.squareup.retrofit2:retrofit:2.0.2'
     implementation 'com.squareup.retrofit2:converter-gson:2.0.2'
+    implementation 'com.squareup.retrofit2:converter-scalars:2.3.0'
     //FINGER PRINT
     implementation 'asia.kanopi.tools:fingerscan:0.1'
     //COMPARISON FINGER PRINT
     implementation 'com.machinezoo.sourceafis:sourceafis:3.11.0'
     implementation 'de.hdodenhof:circleimageview:2.1.0'
-    //QR CODE
-    implementation 'com.gpfreetech:AwesomeCodeScanner:1.1'
+    //QR CODE barcode reader library
+    implementation 'info.androidhive:barcode-reader:1.1.5'
 
 }

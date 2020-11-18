@@ -36,7 +36,7 @@ public  class Helper {
 private DatabaseHelper dbh;
 private Bitmap image;
 private Context context;
-
+    private static final String SHARED_PREF_NAME = "MY_SHARED_PREFERENCES";
 
     public Helper( Context context) {
         this.context = context;
@@ -153,7 +153,11 @@ private Context context;
     public byte[] base64ToByteArray(String imageString ){
         byte[] arrayBytes = null;
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-            arrayBytes = Base64.getDecoder().decode(imageString);
+            try{
+                arrayBytes = Base64.getDecoder().decode(imageString);
+            }catch (IllegalArgumentException ex){
+
+            }
         }
         return  arrayBytes;
     }

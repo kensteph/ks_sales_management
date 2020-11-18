@@ -64,8 +64,11 @@ public class MainActivity extends AppCompatActivity {
     private ArrayList<Item> productsList;
     //Holds all Employees
     private ArrayList<Employee> employeesList;
+    //SHARED PREFERENCES
     private static final String SHARED_PREF_NAME = "MY_SHARED_PREFERENCES";
     SharedPreferences sp;
+    private String Email;
+    private String Password;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -85,9 +88,14 @@ public class MainActivity extends AppCompatActivity {
         listDbFingerPrints = new ArrayList<EmployeeFingerTemplate>();
         productsList = new ArrayList<Item>();
         employeesList = new ArrayList<Employee>();
-        //LAUNCH LOGIN ACTIVITY
+
+        //GET INFO FROM SHARED PREFERENCES
         sp = getSharedPreferences(SHARED_PREF_NAME, MODE_PRIVATE);
+        Email = sp.getString("email","");
+        Password = sp.getString("password","");
         Boolean isLogin = sp.getBoolean("isLogin", false);
+
+        //LAUNCH LOGIN ACTIVITY
         if(!isLogin){
             Intent intent = new Intent(MainActivity.this, LoginActivity.class);
             startActivity(intent);
@@ -103,8 +111,8 @@ public class MainActivity extends AppCompatActivity {
                // startScan();
                 // FOR TEST 9A6060AF
                 Intent intent = new Intent(MainActivity.this, ProductsList.class);
-                intent.putExtra("EmployeeFullName","Ansderly RAMEAU | AR007-1");
-                intent.putExtra("EmployeeId",1);
+                intent.putExtra("EmployeeFullName","Luchano Joachim | 001-1990-877-774-299");
+                intent.putExtra("EmployeeId",3);
                 startActivity(intent);
             }
         });
@@ -330,25 +338,31 @@ public class MainActivity extends AppCompatActivity {
     private void getAllProducts(){
         ApiInterface apiService =
                 ApiClient.getClient().create(ApiInterface.class);
-
-        Call<JsonObject> call = apiService.getAllProducts();
+        Log.d("CREDENTIALS",Email+" | "+Password);
+        Call<JsonObject> call = apiService.getAllProducts(Email,Password);
         call.enqueue(new Callback<JsonObject>() {
             @Override
             public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
-                //Log.d("SERVER",response.body().toString());
+                Log.d("SERVER",response.message());
                 JSONObject jsonObject = null;
                 try {
                     jsonObject = new JSONObject(new Gson().toJson(response.body()));
                      //GET ALL PRODUCTS
                     JSONArray arrayProducts = jsonObject.getJSONArray("Products");
+                    Log.d("SERVER OBJ",arrayProducts.toString());
                     //EMPTY THE PRODUCTS TABLE
                     db.emptyTable("products");
                     for (int i = 0; i < arrayProducts.length(); i++) {
                         JSONObject data = arrayProducts.getJSONObject(i);
-                        Item product = new Item(data.getInt("id"),data.getInt("categoryId"),data.getInt("subCategoryId"),data.getString("name"),data.getDouble("unitPrice"),data.getString("url"));
+                       int productID = data.getInt("ProduitId");
+                       int categoryID = data.getInt("CategoryId");
+                       String productDESC = data.getString("Description");
+                       double productPrice = data.getDouble("Prix");
+                       String productIMG = data.getString("IconeUrl")+".jpg";
+                        Item product = new Item(productID,categoryID,categoryID,productDESC,productPrice,productIMG);
                         productsList.add(product);
-                        db.saveProducts(data.getInt("id"),data.getInt("subCategoryId"),data.getString("name"),data.getDouble("unitPrice"),data.getString("url"));
-                        Log.d("SERVER 3",data.getString("name"));
+                        db.saveProducts(productID,categoryID,productDESC,productPrice,productIMG);
+                        Log.d("SERVER 3",productDESC);
                     }
                     showProgress("",false);
                     showMessage(true, "Synchronisation terminée...");
@@ -357,6 +371,8 @@ public class MainActivity extends AppCompatActivity {
 //                    startActivity(intent);
                 } catch (JSONException e) {
                     e.printStackTrace();
+                    showProgress("",false);
+                    showMessage(false, ""+e.toString());
                 }
             }
 
@@ -369,6 +385,111 @@ public class MainActivity extends AppCompatActivity {
             }
         });
     }
+
+    //GET ALL THE EMPLOYEES REFERENCES
+    private void getEmployeesReferences(){
+        ApiInterface apiService =
+                ApiClient.getClient().create(ApiInterface.class);
+        Call<JsonObject> call = apiService.getEmployeesReferences(Email,Password);
+        call.enqueue(new Callback<JsonObject>() {
+            @Override
+            public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
+                //Log.d("SERVER",response.body().toString());
+                JSONObject jsonObject = null;
+                try {
+                    jsonObject = new JSONObject(new Gson().toJson(response.body()));
+                    //GET ALL EMPLOYEES
+                    JSONArray array = jsonObject.getJSONArray("References");
+                    //EMPTY THE EMPLOYEES TABLE
+                    db.emptyTable("employes");
+                    Log.d("SERVER REP","REFERENCES COUNT : "+array.length());
+                    for (int i = 0; i < array.length(); i++) {
+                        //JSONObject data = array.getJSONObject(i);
+                         int employeeID = array.getInt(i);
+                         getEmployeeInfo(employeeID);
+//                        Employee employee = new Employee(data.getInt("id"),data.getInt("entreprise_id"),data.getString("employe_code"),data.getString("employe_prenom"),data.getString("employe_nom"));
+//                        db.saveEmployees(employee);
+//                        Log.d("SERVER 1",data.getString("employe_prenom"));
+                    }
+
+
+//                    showProgress("",false);
+//                    showMessage(true, "Synchronisation terminée...");
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                    showProgress("",false);
+                    showMessage(true, e.toString());
+                }
+            }
+
+            @Override
+            public void onFailure(Call<JsonObject> call, Throwable t) {
+                showProgress("",false);
+                showMessage(false, t.getMessage());
+                //Toast.makeText(getApplicationContext(), "Unable to fetch json: " + t.getMessage(), Toast.LENGTH_LONG).show();
+                Log.d("SERVER",t.getMessage());
+            }
+        });
+    }
+
+    //GET EMPLOYEES INFO
+    private void getEmployeeInfo(int employeeRef){
+        ApiInterface apiService =
+                ApiClient.getClient().create(ApiInterface.class);
+        Call<JsonObject> call = apiService.getEmployee(employeeRef,Email,Password);
+        call.enqueue(new Callback<JsonObject>() {
+            @Override
+            public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
+                Log.d("SERVER EMP",response.body().toString());
+                JSONObject jsonObject = null;
+               try {
+                   //EMPTY THE EMPLOYEES TABLE
+                    db.emptyTable("employes");
+                    jsonObject = new JSONObject(new Gson().toJson(response.body()));
+                    String employee_FirstName = jsonObject.getString("Prenom");
+                    String employee_LastName = jsonObject.getString("Nom");
+                    String employee_CIN = jsonObject.getString("CIN");
+                    int  employee_ID = jsonObject.getInt("EmployeId");
+                    int  employee_Enterprise = 1;
+                    //SAVE EMPLOYEE IN LOCAL DATABASE
+                    Employee employee = new Employee(employee_ID,employee_Enterprise,employee_CIN,employee_FirstName,employee_LastName);
+                    db.saveEmployees(employee);
+                    Log.d("SERVER 1",employee_FirstName);
+                    Log.d("EMPLOYEE","EMPLOYEE : "+employee_FirstName);
+
+                    //GET FINGER PRINTS
+                    JSONArray array = jsonObject.getJSONArray("Fingers");
+                    Log.d("FINGER PRINTS","FINGER PRINTS : "+array.length());
+                    //EMPTY THE FINGERPRINTS TABLE
+                     db.emptyTable("empreintes");
+                    for (int i = 0; i < array.length(); i++) {
+                        JSONObject data = array.getJSONObject(i);
+                        String finger = data.getString("Finger");
+                        byte[] fp =helper.base64ToByteArray(data.getString("FingerPrint"));
+                        byte[] tp = helper.base64ToByteArray(data.getString("Template"));
+                        db.saveFingerPrintsFromServer(employee_ID,finger,fp,tp);
+                        Log.d("SERVER 2","EMPLOYE ID : "+employee_ID);
+                    }
+//
+
+                    showProgress("",false);
+                    showMessage(true, "Synchronisation terminée...");
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                   Log.d("SERVER ERR",e.toString());
+                }
+            }
+
+            @Override
+            public void onFailure(Call<JsonObject> call, Throwable t) {
+                showProgress("",false);
+                showMessage(false, t.getMessage());
+                //Toast.makeText(getApplicationContext(), "Unable to fetch json: " + t.getMessage(), Toast.LENGTH_LONG).show();
+                Log.d("SERVER",t.getMessage());
+            }
+        });
+    }
+
     //GET ALL THE EMPLOYEES
     private void getEmployees(){
         ApiInterface apiService =
@@ -401,7 +522,7 @@ public class MainActivity extends AppCompatActivity {
                         int employeeId=data.getInt("employe_id");
                         byte[] fp =helper.base64ToByteArray(data.getString("finger_print"));
                         byte[] tp = helper.base64ToByteArray(data.getString("template"));
-                        db.saveFingerPrintsFromServer(employeeId,fp,tp);
+                        db.saveFingerPrintsFromServer(employeeId,"",fp,tp);
                         Log.d("SERVER 2","EMPLOYE ID : "+employeeId);
                     }
 
@@ -421,6 +542,9 @@ public class MainActivity extends AppCompatActivity {
             }
         });
     }
+
+
+
     //SYNCHRONIZE THE PRODUCTS FROM SERVER
     private void synchronizeProducts() {
         AlertDialog.Builder builder;
@@ -469,7 +593,8 @@ public class MainActivity extends AppCompatActivity {
                     public void onClick(DialogInterface dialog, int which)
                     {
                         showProgress("Synchronisation des employés...",true);
-                        getEmployees();//Get Products fom server
+                        getEmployeesReferences();
+                        //getEmployees();//Get Products fom server
                     }
                 })
                 .setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener()

@@ -1,6 +1,7 @@
 package com.snack_bar;
 
 import android.app.ProgressDialog;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.MenuItem;
@@ -19,7 +20,6 @@ import com.snack_bar.network.ApiClient;
 import com.snack_bar.network.ApiInterface;
 import com.snack_bar.util.Helper;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -38,6 +38,12 @@ private ProgressDialog dialog;
 private Button btnSynchronizeFingerPrints;
 private List<FingerPrintTemp> temporaryFingerPrints;
 private Helper helper;
+//SHARED PREFERENCES
+private static final String SHARED_PREF_NAME = "MY_SHARED_PREFERENCES";
+SharedPreferences sp;
+private String Email;
+private String Password;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -45,11 +51,18 @@ private Helper helper;
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         helper = new Helper();
         db = new DatabaseHelper(this);
+
+        //GET INFO FROM SHARED PREFERENCES
+        sp = getSharedPreferences(SHARED_PREF_NAME, MODE_PRIVATE);
+        Email = sp.getString("email","");
+        Password = sp.getString("password","");
+
         nbFingerPrintsToSync = db.getFingerCount();
         temporaryFingerPrints = new ArrayList<>();
         temporaryFingerPrints = db.getTemporaryFingers();
         nbFp = (TextView) findViewById(R.id.nbFpSync);
         nbFp.setText(nbFingerPrintsToSync+" Empreintes à synchroniser");
+
         btnSynchronizeFingerPrints = findViewById(R.id.btnSynchronizeFingerPrints);
         if(nbFingerPrintsToSync==0){
             btnSynchronizeFingerPrints.setEnabled(false);
@@ -95,17 +108,19 @@ private Helper helper;
         List<Integer> salesSucceedID;
         ApiInterface apiService =
                 ApiClient.getClient().create(ApiInterface.class);
-        Call<JsonObject> call = apiService.UploadFingerPrintsToServer(data);
+        Call<JsonObject> call = apiService.UploadFingerPrintsToServer (data);
         call.enqueue(new Callback<JsonObject>() {
             @Override
             public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
+                Log.d("SERVER REP",response.body().toString());
                 int nbSuccess=0;
                 //Get the response
                 JSONObject jsonObject = null;
                 try {
                     jsonObject = new JSONObject(new Gson().toJson(response.body()));
-                    JSONObject Response  = jsonObject.getJSONObject("response");
-                    nbSuccess = Response.getInt("TotalSuccess");
+                    //Log.d(" responce => ", jsonObject.getJSONObject("body").toString());
+//                    JSONObject Response  = jsonObject.getJSONObject("response");
+//                    nbSuccess = Response.getInt("TotalSuccess");
 //                    JSONArray list = Response.getJSONArray("SuccessId");
 //                    for (int i = 0; i < list.length(); i++) {
 //                        int saleId = list.getInt(i);
@@ -113,6 +128,7 @@ private Helper helper;
 //                    }
                 } catch (JSONException e) {
                     e.printStackTrace();
+                    Log.d(" responce => ", e.toString());
                 }
                 if(nbSuccess==0) {
                     Toast.makeText(getApplicationContext()," Aucune vente n'a été enregistrée...", Toast.LENGTH_LONG).show();
@@ -122,7 +138,7 @@ private Helper helper;
                     btnSynchronizeFingerPrints.setText("Aucune vente à synchroniser");
                 }
 
-                Log.d("SERVER",jsonObject.toString());
+                //Log.d("SERVER",jsonObject.toString());
                 showProgress("Synchronisation des ventes terminée.....",false);
             }
 
@@ -138,24 +154,63 @@ private Helper helper;
 
     //PREPARE DATA TO SENT
     private void saveFingerPrintsToServer(List<FingerPrintTemp> listFingerPrints){
-        JSONArray array = new JSONArray();
+        int pos=1;
         for (FingerPrintTemp fpT : listFingerPrints)
         {
-            JSONObject obj = new JSONObject();
-            try {
-                obj.put("EmployeeId", fpT.getEmployeeId());
-                obj.put("Finger","");
-                obj.put("FingerPrint", fpT.getFingerPrintImageBase64());
-                obj.put("FingerPrintTemplate", fpT.getFingerPrintTemplateBase64());
-                array.put(obj);
-            } catch (JSONException e) {
-                e.printStackTrace();
+            testSendFingerPrintToServer(fpT,pos);
+            pos++;
+        }
+    }
+
+    //TEST SERVER
+    private void testSendFingerPrintToServer(FingerPrintTemp fpT,int pos){
+        JsonObject login = new JsonObject();
+        JsonObject obj = new JsonObject();
+            login.addProperty ("Email",Email);
+            login.addProperty("Password",Password);
+            obj.addProperty("EmployeId", 3);
+            obj.addProperty("Finger", "RTF");
+            obj.addProperty("FingerPrint",fpT.getFingerPrintImageBase64());
+            obj.addProperty("Template", fpT.getFingerPrintTemplateBase64());
+            obj.add("Login",login);
+            String data = obj.toString();
+            //Log.d("SERVER", "JSON : " + data);
+           postDataToServer(obj,pos);
+
+
+    }
+
+    private void postDataToServer(JsonObject obj,int pos){
+        // Using the Retrofit
+        ApiInterface apiService =
+                ApiClient.getClient().create(ApiInterface.class);
+        Call<JsonObject> call = apiService.postFingerPrint (obj);
+        showProgress("Synchronisation des empreintes ",true);
+        call.enqueue(new Callback<JsonObject>() {
+
+            @Override
+            public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
+                try{
+                    Log.e("response-success", response.body().toString());
+                    if(pos==temporaryFingerPrints.size()){
+                        showProgress("Synchronisation des empreintes terminée.",false);
+                        nbFp.setText("Synchronisation des empreintes terminée");
+                        btnSynchronizeFingerPrints.setVisibility(View.INVISIBLE);
+                    }
+                }catch (Exception e){
+                    e.printStackTrace();
+                }
             }
 
-        }
-        String data = array.toString();
-        Log.d("SERVERDATA","JSON : "+data);
-        postFingerPrints(data);
+            @Override
+            public void onFailure(Call<JsonObject> call, Throwable t) {
+                Log.e("response-failure", call.toString());
+                showProgress("Synchronisation des empreintes terminée.",false);
+                nbFp.setText("Une erreur est survenue.Reessayez");
+            }
+
+        });
     }
+
 
 }

@@ -3,8 +3,16 @@ package com.snack_bar.model;
 public class FingerPrintTemp {
     private String fingerPrintImageBase64;
     private String fingerPrintTemplateBase64;
+    private String finger;
     private int employeeId;
 
+    public String getFinger() {
+        return finger;
+    }
+
+    public void setFinger(String finger) {
+        this.finger = finger;
+    }
     public String getFingerPrintImageBase64() {
         return fingerPrintImageBase64;
     }

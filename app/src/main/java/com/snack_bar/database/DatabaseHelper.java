@@ -87,6 +87,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             "        CREATE TABLE empreintes_tmp(" +
                     "        id INTEGER PRIMARY KEY AUTOINCREMENT," +
                     "        employe_id INTEGER," +
+                    "        empreinte_nom TEXT," +
                     "        empreinte TEXT," +
                     "        template TEXT," +
                     "        create_at DATETIME DEFAULT CURRENT_TIMESTAMP);";
@@ -217,11 +218,11 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.close();
     }
     //SAVE FINGERPRINTS
-    public void saveFingerPrintsFromServer(int employeeId,byte[] fingerPrint,byte[] template) {
+    public void saveFingerPrintsFromServer(int employeeId,String finger,byte[] fingerPrint,byte[] template) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
         values.put("employe_id", employeeId);
-        values.put("empreinte_nom", "finger");
+        values.put("empreinte_nom", finger);
         values.put("empreinte", fingerPrint);
         values.put("template", template);
         db.insert(TABLE_FINGERPRINTS, null, values);
@@ -237,7 +238,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public List<Item> getProducts() {
         SQLiteDatabase db = this.getWritableDatabase();
         List<Item> listItems = new ArrayList<Item>(); // Create an ArrayList object
-        String selectQuery ="SELECT * FROM products  ORDER BY product_name";
+        String selectQuery ="SELECT * FROM products  ORDER BY sub_category_id";
         Cursor cursor2 = db.rawQuery(selectQuery, null);
         while(cursor2.moveToNext()) {
             int id = cursor2.getInt(cursor2.getColumnIndexOrThrow("id"));
@@ -330,6 +331,19 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.close();
         return done;
     }
+    //DELETE SALES DETAILS
+    public boolean deleteSaleDetails(int saleId,int productId) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        boolean done=false;
+        String query2="DELETE FROM sale_details WHERE vente_id="+saleId+" AND produit_id="+productId;
+        db.execSQL(query2);
+        Log.d("DB",query2);
+        done=true;
+        db.close();
+        return done;
+    }
+
+
     //ADD FINGERPRINT FOR EMPLOYEE
     public boolean addFingerPrint(byte[] imageByteArray, int employeeId,String finger) {
         SQLiteDatabase db = this.getWritableDatabase();
@@ -352,8 +366,10 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             for (FingerPrintTemp fp : fingerprints) {
                 ContentValues values = new ContentValues();
                 values.put("employe_id", fp.getEmployeeId());
+                values.put("empreinte_nom", fp.getFinger());
                 values.put("empreinte", fp.getFingerPrintImageBase64());
                 values.put("template", fp.getFingerPrintTemplateBase64());
+
                 db.insert(TABLE_FINGERPRINTS_TMP, null, values);
             }
             db.setTransactionSuccessful();

@@ -8,7 +8,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
-import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
@@ -20,27 +19,16 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 
 import com.google.android.material.snackbar.Snackbar;
-import com.google.gson.Gson;
-import com.google.gson.JsonObject;
 import com.snack_bar.database.DatabaseHelper;
 import com.snack_bar.model.Employee;
 import com.snack_bar.model.FingerPrintTemp;
-import com.snack_bar.network.ApiClient;
-import com.snack_bar.network.ApiInterface;
 import com.snack_bar.util.Helper;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import asia.kanopi.fingerscan.Fingerprint;
 import asia.kanopi.fingerscan.Status;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
 
 public class AddFingerPrintActivity extends AppCompatActivity {
     private int selectedEmployeeID=0;
@@ -120,7 +108,7 @@ public class AddFingerPrintActivity extends AppCompatActivity {
 
     private void saveFingerPrintTo(String server) {
         if(server=="SERVER"){
-            saveFingerprintToServer();
+            //saveFingerprintToServer();
         }else{
             saveFingerprintLocalDB();
         }
@@ -270,92 +258,10 @@ public class AddFingerPrintActivity extends AppCompatActivity {
 
         snackbar.show();
     }
-    //SEND THE FINGERPRINTS TO SERVER
-    private void saveFingerprintToServer(){
-        prepareFingerPrintsToSend();
-    }
-    private void prepareFingerPrintsToSend() {
-        if(LF1!= null && LF2!= null && RF1!= null && RF2!= null && selectedEmployeeID!=0) {
-            showProgress("Envoie  des empreintes vers le serveur.....",true);
-            List<byte[]> employeeFingers = new ArrayList<>();
-            employeeFingers.add(LF1);
-            employeeFingers.add(LF2);
-            employeeFingers.add(RF1);
-            employeeFingers.add(RF2);
 
-            JSONArray array = new JSONArray();
-            for (byte[] fp : employeeFingers) {
-                String encodedTemplate ="";
-                String encodedFinger ="";
-                try {
-                    //LEFT FINGER 1
-                    JSONObject obj = new JSONObject();
-                    byte[] serializeTemplate = helper.serializedTemplate(fp);
-                    //CONVERT THE TEMPLATE TO BASE64
-                    encodedTemplate = helper.byteArrayToBase64(serializeTemplate);
-                    encodedFinger = helper.byteArrayToBase64(fp);
-                    obj.put("EmployeeId", selectedEmployeeID);
-                    obj.put("Finger", "");
-                    obj.put("FingerPrint", encodedFinger);
-                    obj.put("FingerPrintTemplate", encodedTemplate);
-                    array.put(obj);
-
-
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-            }
-            String data = array.toString();
-            Log.d("SERVER", "JSON : " + data);
-            postFingerPrints(data);
-        }else{
-            Toast.makeText(getApplicationContext(),"Veuillez prendre toutes les Empreintes...",Toast.LENGTH_LONG).show();
-            buttonAddFingerprint.setVisibility(View.VISIBLE);
-        }
-    }
-    private void postFingerPrints(String data) {
-        List<Integer> salesSucceedID;
-        ApiInterface apiService =
-                ApiClient.getClient().create(ApiInterface.class);
-        Call<JsonObject> call = apiService.UploadFingerPrintsToServer(data);
-        call.enqueue(new Callback<JsonObject>() {
-            @Override
-            public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
-                String error="";
-                String success="";
-                //Get the response
-                JSONObject jsonObject = null;
-                try {
-                    jsonObject = new JSONObject(new Gson().toJson(response.body()));
-                    JSONObject Response  = jsonObject.getJSONObject("response");
-                    success = Response.getString("success");
-                    error = Response.getString("error");
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-                if(success=="") {
-                    //Toast.makeText(getApplicationContext()," Aucune empreinte n'a été synchronisée...", Toast.LENGTH_LONG).show();
-                    showMessage(false, " Aucune empreinte n'a été synchronisée...");
-                }else{
-                    Toast.makeText(getApplicationContext(), "Les empreintes ont été synchronisées avec succès...", Toast.LENGTH_LONG).show();
-                    finish();
-                }
-
-                Log.d("SERVER",jsonObject.toString());
-                showProgress("Envoie des empreintes terminée.....",false);
-            }
-
-            @Override
-            public void onFailure(Call<JsonObject> call, Throwable t) {
-                showProgress("Envoie  des empreintes terminée.....",false);
-                Toast.makeText(getApplicationContext(), t.toString(), Toast.LENGTH_LONG).show();
-                Log.d("SERVER",t.toString());
-            }
-
-        });
-    }
-    //SEND FINGERPRINT TO LOCAL DB
+    //SAVE FINGERPRINT TO LOCAL DB
     private void saveFingerprintLocalDB(){
+        showProgress("Saving FingerPrints....",true);
         int qty = 0;
         byte[] serializeTemplate;
         String template,fingerImage;
@@ -374,6 +280,7 @@ public class AddFingerPrintActivity extends AppCompatActivity {
             fingerPrintTempF1.setEmployeeId(selectedEmployeeID);
             fingerPrintTempF1.setFingerPrintImageBase64(fingerImage);
             fingerPrintTempF1.setFingerPrintTemplateBase64(template);
+            fingerPrintTempF1.setFinger("LF1");
             temporaryList.add(fingerPrintTempF1);
             //================== LF2 ============================
             FingerPrintTemp fingerPrintTempF2 = new FingerPrintTemp();
@@ -386,6 +293,7 @@ public class AddFingerPrintActivity extends AppCompatActivity {
             fingerPrintTempF2.setEmployeeId(selectedEmployeeID);
             fingerPrintTempF2.setFingerPrintImageBase64(fingerImage);
             fingerPrintTempF2.setFingerPrintTemplateBase64(template);
+            fingerPrintTempF2.setFinger("LF2");
             temporaryList.add(fingerPrintTempF2);
             //================== RF1 ============================
             FingerPrintTemp fingerPrintTempF3 = new FingerPrintTemp();
@@ -398,6 +306,7 @@ public class AddFingerPrintActivity extends AppCompatActivity {
             fingerPrintTempF3.setEmployeeId(selectedEmployeeID);
             fingerPrintTempF3.setFingerPrintImageBase64(fingerImage);
             fingerPrintTempF3.setFingerPrintTemplateBase64(template);
+            fingerPrintTempF3.setFinger("RF1");
             temporaryList.add(fingerPrintTempF3);
             //================== RF2 ============================
             FingerPrintTemp fingerPrintTempF4 = new FingerPrintTemp();
@@ -410,37 +319,22 @@ public class AddFingerPrintActivity extends AppCompatActivity {
             fingerPrintTempF4.setEmployeeId(selectedEmployeeID);
             fingerPrintTempF4.setFingerPrintImageBase64(fingerImage);
             fingerPrintTempF4.setFingerPrintTemplateBase64(template);
+            fingerPrintTempF4.setFinger("RF2");
             temporaryList.add(fingerPrintTempF4);
 
             //SAVE THE INFO TO DB
             if(db.addTemporaryFingerPrint(temporaryList)){
+                showProgress("Saving FingerPrints....",false);
                 Toast.makeText(getApplicationContext(), "Empreintes ajoutés avec succès.... ", Toast.LENGTH_LONG).show();
                 finish();
             }else{
+                showProgress("Saving FingerPrints....",false);
                 Toast.makeText(getApplicationContext(), "Echec lors de la sauvegarde des emprentes...", Toast.LENGTH_LONG).show();
                 buttonAddFingerprint.setVisibility(View.VISIBLE);
             }
 
-//            if(db.addFingerPrint(LF1,selectedEmployeeID,"LF1")){
-//                qty++;
-//            }
-//            if(db.addFingerPrint(LF2,selectedEmployeeID,"LF2")){
-//                qty++;
-//            }
-//            if(db.addFingerPrint(RF1,selectedEmployeeID,"RF1")){
-//                qty++;
-//            }
-//            if(db.addFingerPrint(RF2,selectedEmployeeID,"RF2")){
-//                qty++;
-//            }
-//            if(qty==4) {
-//                Toast.makeText(getApplicationContext(), "Empreintes ajoute avec succès ", Toast.LENGTH_LONG).show();
-//                finish();
-//            }else{
-//                Toast.makeText(getApplicationContext(), "Echec lors de la sauvegarde des emprentes...", Toast.LENGTH_LONG).show();
-//                buttonAddFingerprint.setVisibility(View.VISIBLE);
-//            }
         }else{
+            showProgress("Saving FingerPrints....",false);
             Toast.makeText(getApplicationContext(),"Veuillez prendre toutes les Empreintes...",Toast.LENGTH_LONG).show();
             buttonAddFingerprint.setVisibility(View.VISIBLE);
         }

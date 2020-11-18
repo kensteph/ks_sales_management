@@ -1,13 +1,13 @@
 package com.snack_bar;
 
 import android.app.ProgressDialog;
+import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
-import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -17,17 +17,19 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.snack_bar.adapter.SaleListAdapter;
 import com.snack_bar.database.DatabaseHelper;
+import com.snack_bar.model.Item;
 import com.snack_bar.model.Order;
 import com.snack_bar.model.SaleItemListModel;
 import com.snack_bar.network.ApiClient;
 import com.snack_bar.network.ApiInterface;
 import com.snack_bar.util.Helper;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
 import java.util.ArrayList;
 import java.util.List;
+
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -40,6 +42,13 @@ public class SalesListActivity extends AppCompatActivity {
     private ProgressDialog dialog;
     private Button btnSynchronizeSales;
     private Helper helper;
+    //SHARED PREFERENCES
+    private static final String SHARED_PREF_NAME = "MY_SHARED_PREFERENCES";
+    SharedPreferences sp;
+    private String Email;
+    private String Password;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -55,11 +64,18 @@ public class SalesListActivity extends AppCompatActivity {
         recyclerView.setHasFixedSize(true);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
+        //GET INFO FROM SHARED PREFERENCES
+        sp = getSharedPreferences(SHARED_PREF_NAME, MODE_PRIVATE);
+        Email = sp.getString("email","");
+        Password = sp.getString("password","");
+        Boolean isLogin = sp.getBoolean("isLogin", false);
+
         initData();
+
         btnSynchronizeSales.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                SaveSalesToServer();
+                synchronizeSalesToServer(salesList);
             }
         });
     }
@@ -127,95 +143,176 @@ public class SalesListActivity extends AppCompatActivity {
         }
     }
     //UPLOAD SALES
-    private void postSale(String data) {
-        showProgress("Synchronisation des ventes.....",true);
-        List<Integer> salesSucceedID;
-       ApiInterface apiService =
+//    private void postSale(JsonObject data) {
+//        showProgress("Synchronisation des ventes.....",true);
+//        List<Integer> salesSucceedID;
+//       ApiInterface apiService =
+//                ApiClient.getClient().create(ApiInterface.class);
+//        Call<JsonObject> call = apiService.postSales(data);
+//        call.enqueue(new Callback<JsonObject>() {
+//            @Override
+//            public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
+//                int nbSuccess=0;
+//                //Get the response
+//                JSONObject jsonObject = null;
+//                try {
+//                    jsonObject = new JSONObject(new Gson().toJson(response.body()));
+//                    JSONObject Response  = jsonObject.getJSONObject("response");
+//                    nbSuccess = Response.getInt("TotalSuccess");
+//                    JSONArray list = Response.getJSONArray("SuccessId");
+//                    for (int i = 0; i < list.length(); i++) {
+//                        int saleId = list.getInt(i);
+//                        databaseHelper.deleteSale(saleId);
+//                    }
+//                } catch (JSONException e) {
+//                    e.printStackTrace();
+//                }
+//                if(nbSuccess==0) {
+//                    Toast.makeText(getApplicationContext()," Aucune vente n'a été enregistrée...", Toast.LENGTH_LONG).show();
+//                }else{
+//                    Toast.makeText(getApplicationContext(), nbSuccess+" Ventes ont été enregistrées avec succès...", Toast.LENGTH_LONG).show();
+//                    salesList.clear();
+//                    saleListAdapter.notifyDataSetChanged();
+//                    btnSynchronizeSales.setText("Aucune vente à synchroniser");
+//                }
+//
+//                Log.d("SERVER",jsonObject.toString());
+//                showProgress("Synchronisation des ventes terminée.....",false);
+//            }
+//
+//            @Override
+//            public void onFailure(Call<JsonObject> call, Throwable t) {
+//                showProgress("Synchronisation des ventes terminée.....",false);
+//                Toast.makeText(getApplicationContext(), t.toString()+" | "+call.toString(), Toast.LENGTH_LONG).show();
+//                Log.d("SERVER",t.toString());
+//            }
+//
+//        });
+//    }
+//
+//    private void SaveSalesToServer(){
+//        JSONArray array = new JSONArray();
+//        for (SaleItemListModel sale : salesList)
+//        {
+//            JSONObject obj = new JSONObject();
+//            try {
+//                int saleID = sale.getSaleId();
+//                obj.put("SaleId", saleID);
+//                obj.put("SaleDate", sale.getSaleDate());
+//                obj.put("EmployeeId", sale.getEmployee());
+//                obj.put("SellerId", sale.getCashier());
+//                obj.put("Total", sale.getTotal());
+//                obj.put("MaterialId", sale.getMaterialId());
+//                //DETAILS
+//                List<Order> listItems=sale.getItem();
+//                JSONArray arrayDetails = new JSONArray();
+//
+//                for(Order line : listItems) {
+//                    JSONObject Orderdetails = new JSONObject();
+//                    double unitPrice=line.item.unitPrice;
+//                    int productId=line.item.id;
+//                    //Log.d("SERVER","SALE ID : "+sale.getSaleId()+" PRODUCT ID : "+productId);
+//                    Orderdetails.put("VenteId",sale.getSaleId());
+//                    Orderdetails.put("MaterielId",sale.getMaterialId());
+//                    Orderdetails.put("EmployeId",sale.getEmployee());
+//                    Orderdetails.put("VendeurId",sale.getCashier());
+//                    Orderdetails.put("ProduitId",productId);
+//                    Orderdetails.put("Quantite",line.quantity);
+//                    Orderdetails.put("PrixUnitaire",unitPrice);
+//                    Orderdetails.put("DateVente",sale.getSaleDate());
+//                    arrayDetails.put(Orderdetails);
+//                }
+//                Log.d("SERVER","SALE ID : "+saleID +" | "+arrayDetails);
+//                obj.put("Details",arrayDetails);
+//                array.put(obj);
+//            } catch (JSONException e) {
+//                e.printStackTrace();
+//            }
+//
+//        }
+//        String data = array.toString();
+//        Log.d("SERVER","JSON : "+data);
+//        postSale(data);
+//    }
+    //POST SALES TO SERVER
+
+    private void synchronizeSalesToServer(List<SaleItemListModel> salesList){
+        Log.d("SERVER", "SALES COUNT : " + salesList.size());
+        for (SaleItemListModel sale : salesList)
+        {
+                //SALE DETAILS
+            List<Order> saleDetails= new ArrayList<>();
+            saleDetails=sale.getItem();
+            for (Order sd : saleDetails) {
+                prepareJSON(sale.getEmployee(),sd,sale.getSaleDate());
+            }
+        }
+    }
+    private void prepareJSON(int employeeID,Order order,String date){
+        JsonObject login = new JsonObject();
+        JsonObject obj = new JsonObject();
+        login.addProperty ("Email",Email);
+        login.addProperty("Password",Password);
+        //PRODUCT INFO
+        Item item = order.item;
+        obj.addProperty("EmployeId", employeeID);
+        obj.addProperty("ProduitId", item.id);
+        obj.addProperty("Quantite",order.quantity);
+        obj.addProperty("Prix", item.unitPrice);
+        obj.addProperty("Date", date);
+        obj.add("Login",login);
+        String data = obj.toString();
+        Log.d("SERVER", "JSON : " + data);
+        postDataToServer(obj);
+
+    }
+
+    private void postDataToServer(JsonObject obj){
+        // Using the Retrofit
+        ApiInterface apiService =
                 ApiClient.getClient().create(ApiInterface.class);
-        Call<JsonObject> call = apiService.UploadSaleToServer(data);
+        Call<JsonObject> call = apiService.postSales (obj);
+        showProgress("Sales Synchronisation start....",true);
         call.enqueue(new Callback<JsonObject>() {
+
             @Override
             public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
-                int nbSuccess=0;
-                //Get the response
+                try{
+//                      Log.e("response-success", response.body().toString());
                 JSONObject jsonObject = null;
                 try {
                     jsonObject = new JSONObject(new Gson().toJson(response.body()));
-                    JSONObject Response  = jsonObject.getJSONObject("response");
-                    nbSuccess = Response.getInt("TotalSuccess");
-                    JSONArray list = Response.getJSONArray("SuccessId");
-                    for (int i = 0; i < list.length(); i++) {
-                        int saleId = list.getInt(i);
-                        databaseHelper.deleteSale(saleId);
-                    }
+                   if(jsonObject.has("Accepted")){ //REQUEST SUCCESSFUL
+                       Log.e("response-success", jsonObject.getString("Accepted"));
+                   }else{
+                       Log.e("response-failed","SALE DETAILS DON'T SAVE");
+                   }
+
+
+//                    nbSuccess = Response.getInt("TotalSuccess");
+//                    JSONArray list = Response.getJSONArray("SuccessId");
+//                    for (int i = 0; i < list.length(); i++) {
+//                        int saleId = list.getInt(i);
+//                        databaseHelper.deleteSale(saleId);
+//                    }
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
-                if(nbSuccess==0) {
-                    Toast.makeText(getApplicationContext()," Aucune vente n'a été enregistrée...", Toast.LENGTH_LONG).show();
-                }else{
-                    Toast.makeText(getApplicationContext(), nbSuccess+" Ventes ont été enregistrées avec succès...", Toast.LENGTH_LONG).show();
-                    salesList.clear();
-                    saleListAdapter.notifyDataSetChanged();
-                    btnSynchronizeSales.setText("Aucune vente à synchroniser");
+                        showProgress("Synchronisation des empreintes terminée.",false);
+//                        nbFp.setText("Synchronisation des empreintes terminée");
+//                        btnSynchronizeFingerPrints.setVisibility(View.INVISIBLE);
+                }catch (Exception e){
+                    e.printStackTrace();
                 }
-
-                Log.d("SERVER",jsonObject.toString());
-                showProgress("Synchronisation des ventes terminée.....",false);
             }
 
             @Override
             public void onFailure(Call<JsonObject> call, Throwable t) {
-                showProgress("Synchronisation des ventes terminée.....",false);
-                Toast.makeText(getApplicationContext(), t.toString()+" | "+call.toString(), Toast.LENGTH_LONG).show();
-                Log.d("SERVER",t.toString());
+                Log.e("response-failure", call.toString());
+                showProgress("Sales Synchronisation done.",false);
+                //nbFp.setText("Une erreur est survenue.Reessayez");
             }
 
         });
-    }
-
-    private void SaveSalesToServer(){
-        JSONArray array = new JSONArray();
-        for (SaleItemListModel sale : salesList)
-        {
-            JSONObject obj = new JSONObject();
-            try {
-                int saleID = sale.getSaleId();
-                obj.put("SaleId", saleID);
-                obj.put("SaleDate", sale.getSaleDate());
-                obj.put("EmployeeId", sale.getEmployee());
-                obj.put("SellerId", sale.getCashier());
-                obj.put("Total", sale.getTotal());
-                obj.put("MaterialId", sale.getMaterialId());
-                //DETAILS
-                List<Order> listItems=sale.getItem();
-                JSONArray arrayDetails = new JSONArray();
-
-                for(Order line : listItems) {
-                    JSONObject Orderdetails = new JSONObject();
-                    double unitPrice=line.item.unitPrice;
-                    int productId=line.item.id;
-                    //Log.d("SERVER","SALE ID : "+sale.getSaleId()+" PRODUCT ID : "+productId);
-                    Orderdetails.put("VenteId",sale.getSaleId());
-                    Orderdetails.put("MaterielId",sale.getMaterialId());
-                    Orderdetails.put("EmployeId",sale.getEmployee());
-                    Orderdetails.put("VendeurId",sale.getCashier());
-                    Orderdetails.put("ProduitId",productId);
-                    Orderdetails.put("Quantite",line.quantity);
-                    Orderdetails.put("PrixUnitaire",unitPrice);
-                    Orderdetails.put("DateVente",sale.getSaleDate());
-                    arrayDetails.put(Orderdetails);
-                }
-                Log.d("SERVER","SALE ID : "+saleID +" | "+arrayDetails);
-                obj.put("Details",arrayDetails);
-                array.put(obj);
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-
-        }
-        String data = array.toString();
-        Log.d("SERVER","JSON : "+data);
-        postSale(data);
     }
 }
