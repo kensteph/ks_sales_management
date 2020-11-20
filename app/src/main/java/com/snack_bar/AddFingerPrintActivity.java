@@ -1,9 +1,12 @@
 package com.snack_bar;
 
+import android.app.AlertDialog;
 import android.app.ProgressDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -100,7 +103,7 @@ public class AddFingerPrintActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 buttonAddFingerprint.setVisibility(View.GONE);
-                saveFingerPrintTo("LOCAL");
+                saveFingerPrints();
             }
         });
 
@@ -139,7 +142,6 @@ public class AddFingerPrintActivity extends AppCompatActivity {
         fingerprint.scan(this, printHandler, updateHandler);
         Toast.makeText(getApplicationContext(),"FINGER : "+finger,Toast.LENGTH_LONG).show();
     }
-
 
     @Override
     protected void onStop() {
@@ -339,5 +341,33 @@ public class AddFingerPrintActivity extends AppCompatActivity {
             buttonAddFingerprint.setVisibility(View.VISIBLE);
         }
     }
-
+    //DIALOG SAVE FINGERPRINTS
+    private void saveFingerPrints() {
+        AlertDialog.Builder builder;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
+        {
+            builder = new AlertDialog.Builder(AddFingerPrintActivity.this, android.R.style.Theme_Material_Dialog_Alert);
+        } else
+        {
+            builder = new AlertDialog.Builder(AddFingerPrintActivity.this);
+        }
+        builder.setCancelable(false);
+        builder.setTitle("Add Fingerprints")
+                .setMessage("Do you really want to SAVE THOSE FINGERPRINTS")
+                .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener()
+                {
+                    public void onClick(DialogInterface dialog, int which)
+                    {
+                        saveFingerPrintTo("LOCAL");
+                    }
+                })
+                .setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener()
+                {
+                    public void onClick(DialogInterface dialog, int which)
+                    {
+                        buttonAddFingerprint.setVisibility(View.VISIBLE);
+                    }
+                })
+                .show();
+    }
 }

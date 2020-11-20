@@ -25,7 +25,7 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 public class LoginActivity extends AppCompatActivity {
-    EditText email, password;
+    public static  EditText email, password;
     ImageView launchScan;
     Button login;
     boolean isEmailValid, isPasswordValid;
@@ -40,11 +40,6 @@ public class LoginActivity extends AppCompatActivity {
         password = (EditText) findViewById(R.id.password);
         launchScan = (ImageView) findViewById(R.id.launchScan);
         login = (Button) findViewById(R.id.login);
-         String barcode = getIntent().getStringExtra("code");
-         password.setText(barcode);
-         String emailInfo = getIntent().getStringExtra("email");
-          email.setText(emailInfo);
-
         login.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -54,8 +49,6 @@ public class LoginActivity extends AppCompatActivity {
         launchScan.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Toast.makeText(getApplicationContext(), "Scan Launch.....", Toast.LENGTH_SHORT).show();
-                // redirect to RegisterActivity
                 Intent intent = new Intent(getApplicationContext(), ScannerActivity.class);
                 intent.putExtra("email",email.getText().toString());
                 startActivity(intent);
@@ -73,34 +66,34 @@ public class LoginActivity extends AppCompatActivity {
         // Using the Retrofit
         ApiInterface apiService =ApiClient.getClient().create(ApiInterface.class);
         Call<Object> call = apiService.login (email.getText().toString(),password.getText().toString());
-        showProgress("Authentification ",true);
+        showProgress("Authentication ",true);
         call.enqueue(new Callback<Object>() {
 
             @Override
             public void onResponse(Call<Object> call, Response<Object> response) {
-                try{
-                    showProgress("Authentification.",false);
-//                    Log.e("response-success", response.body().toString());
+                if(response.isSuccessful()){
+                    Log.e("response-success", response.body().toString());
+                    showProgress("Authentication.",false);
                     Log.d("SERVER",response.message());
-//                    jsonObject = new JSONObject(new Gson().toJson(response.body()));
-//                    Log.d("LOGIN","SUCCEED...");
-                    SharedPreferences sp = getSharedPreferences(SHARED_PREF_NAME, MODE_PRIVATE);
-                    SharedPreferences.Editor editor = sp.edit();
-                    editor.putBoolean("isLogin", true);
-                    editor.putString("email", email.getText().toString());
-                    editor.putString("password", password.getText().toString());
-                    editor.apply();
-                    Toast.makeText(getApplicationContext(), "Successfully", Toast.LENGTH_SHORT).show();
-                    //redirect to RegisterActivity
-                    Intent intent = new Intent(getApplicationContext(), MainActivity.class);
-                    intent.putExtra("email",email.getText().toString());
-                    startActivity(intent);
-                    finish();
 
-                }catch (Exception e){
-                    e.printStackTrace();
-                    Log.d("SERVER ERROR",e.toString());
-                    showProgress("Synchronisation des empreintes terminée.",false);
+                        String userName = response.body().toString();
+                        SharedPreferences sp = getSharedPreferences(SHARED_PREF_NAME, MODE_PRIVATE);
+                        SharedPreferences.Editor editor = sp.edit();
+                        editor.putBoolean("isLogin", true);
+                        editor.putString("user", userName);
+                        editor.putString("email", email.getText().toString());
+                        editor.putString("password", password.getText().toString());
+                        editor.apply();
+                        Toast.makeText(getApplicationContext(), "Welcome "+userName, Toast.LENGTH_SHORT).show();
+                        //redirect to RegisterActivity
+                        Intent intent = new Intent(getApplicationContext(), MainActivity.class);
+                        intent.putExtra("email",email.getText().toString());
+                        startActivity(intent);
+                        finish();
+                }else{
+                    showProgress("Authentication.",false);
+                    showMessage(false,"Your email or password is incorrect");
+                    Log.e("response-success", response.message());
                 }
             }
 
@@ -108,12 +101,12 @@ public class LoginActivity extends AppCompatActivity {
             @Override
             public void onFailure(Call<Object> call, Throwable t) {
                 Log.e("response-failure", call.toString());
-                showProgress("Synchronisation des empreintes terminée.",false);
+                showProgress("Authentication",false);
+                showMessage(false,t.toString());
             }
 
         });
     }
-
 
     public void SetValidation() {
         // Check for a valid email address.
@@ -154,7 +147,6 @@ public class LoginActivity extends AppCompatActivity {
         }
 
     }
-
     private void showProgress(String msg,boolean show) {
         if (dialog == null)
         {

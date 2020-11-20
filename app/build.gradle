@@ -55,6 +55,10 @@ dependencies {
     implementation 'com.machinezoo.sourceafis:sourceafis:3.11.0'
     implementation 'de.hdodenhof:circleimageview:2.1.0'
     //QR CODE barcode reader library
-    implementation 'info.androidhive:barcode-reader:1.1.5'
+    implementation 'com.budiyev.android:code-scanner:2.1.0'
+    implementation 'androidx.appcompat:appcompat:1.1.0' //Toolbar
+    implementation 'androidx.drawerlayout:drawerlayout:1.0.0' //DrawerLayout
+    implementation 'androidx.coordinatorlayout:coordinatorlayout:1.0.0'  //CoordinatorLayout
+    implementation 'com.google.android.material:material:1.0.0'
 
 }

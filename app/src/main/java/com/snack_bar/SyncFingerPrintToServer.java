@@ -1,7 +1,10 @@
 package com.snack_bar;
 
+import android.app.AlertDialog;
 import android.app.ProgressDialog;
+import android.content.DialogInterface;
 import android.content.SharedPreferences;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.MenuItem;
@@ -11,7 +14,9 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 
+import com.google.android.material.snackbar.Snackbar;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.snack_bar.database.DatabaseHelper;
@@ -70,7 +75,7 @@ private String Password;
         btnSynchronizeFingerPrints.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                saveFingerPrintsToServer(temporaryFingerPrints);
+                synchronizeFingerPrints();
             }
         });
     }
@@ -101,7 +106,20 @@ private String Password;
             dialog.dismiss();
         }
     }
+    //Shows a message by using Snackbar
+    private void showMessage(Boolean isSuccessful, String message) {
+        Snackbar snackbar = Snackbar.make(findViewById(android.R.id.content), message, Snackbar.LENGTH_LONG);
 
+        if (isSuccessful)
+        {
+            snackbar.getView().setBackgroundColor(ContextCompat.getColor(SyncFingerPrintToServer.this, R.color.colorAccent));
+        } else
+        {
+            snackbar.getView().setBackgroundColor(ContextCompat.getColor(SyncFingerPrintToServer.this, R.color.design_default_color_error));
+        }
+
+        snackbar.show();
+    }
     //UPLOAD FINGERPRINTS TO SERVER
     private void postFingerPrints(String data) {
         showProgress("Synchronisation des ventes.....",true);
@@ -189,22 +207,65 @@ private String Password;
                     Log.e("response-success", response.body().toString());
                     if(pos==temporaryFingerPrints.size()){
                         showProgress("Fingerprints Synchronization complete.",false);
-                        nbFp.setText("Fingerprints Synchronization complete");
-                        btnSynchronizeFingerPrints.setVisibility(View.INVISIBLE);
+                        //EMPTY TEMPORARY FINGERPRINTS TABLE
+                        emptyFingerPrintsTable();
                     }
                 }catch (Exception e){
                     e.printStackTrace();
+                    showMessage(false,e.getMessage());
                 }
             }
 
             @Override
             public void onFailure(Call<JsonObject> call, Throwable t) {
+                showMessage(false,"PLEASE VERIFY YOUR CREDENTIALS OR  NETWORK CONNECTION...");
                 Log.e("response-failure", call.toString());
                 showProgress("Fingerprints Synchronization complete.",false);
                 nbFp.setText("Verify your internet connection and retry....");
             }
 
         });
+    }
+    //DIALOG SYNCHRONIZE THE SALES FROM SERVER
+    private void synchronizeFingerPrints() {
+        AlertDialog.Builder builder;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
+        {
+            builder = new AlertDialog.Builder(SyncFingerPrintToServer.this, android.R.style.Theme_Material_Dialog_Alert);
+        } else
+        {
+            builder = new AlertDialog.Builder(SyncFingerPrintToServer.this);
+        }
+        builder.setCancelable(false);
+        builder.setTitle("Sync Fingerprints")
+                .setMessage("Do you really want to SYNC THOSE FINGERPRINTS")
+                .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener()
+                {
+                    public void onClick(DialogInterface dialog, int which)
+                    {
+                        saveFingerPrintsToServer(temporaryFingerPrints);
+                    }
+                })
+                .setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener()
+                {
+                    public void onClick(DialogInterface dialog, int which)
+                    {
+                        // do nothing
+                    }
+                })
+                .show();
+    }
+    private void emptyFingerPrintsTable() {
+        //GET NUMBER OF FINGERPRINTS TO SYNC
+        nbFingerPrintsToSync = db.getFingerCount();
+        Log.d("SERVER", "FINGERPRINTS TO SEND COUNT : " + nbFingerPrintsToSync);
+        if(nbFingerPrintsToSync ==0) {
+            //EMPTY THE SALES TABLE
+            db.emptyTable("empreintes_tmp");
+            btnSynchronizeFingerPrints.setText("No Fingerprint to sync");
+            btnSynchronizeFingerPrints.setEnabled(false);
+            showMessage(true,"Synchronization complete...");
+        }
     }
 
 

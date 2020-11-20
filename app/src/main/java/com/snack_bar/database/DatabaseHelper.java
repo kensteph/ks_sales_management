@@ -331,6 +331,20 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.close();
         return done;
     }
+    //NUMBER LINES  DETAILS FOUND
+    public int getSalesDetailsCount() {
+        SQLiteDatabase db = this.getWritableDatabase();
+        String selectQuery ="SELECT COUNT(*) as tot FROM sale_details ";
+        Cursor cursor2 = db.rawQuery(selectQuery, null);
+        int nb=0;
+        if(cursor2.moveToNext()) {
+            nb = cursor2.getInt(cursor2.getColumnIndexOrThrow("tot"));
+        }
+
+        cursor2.close();
+        db.close();
+        return nb;
+    }
     //DELETE SALES DETAILS
     public boolean deleteSaleDetails(int saleId,int productId) {
         SQLiteDatabase db = this.getWritableDatabase();

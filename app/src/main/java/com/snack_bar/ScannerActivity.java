@@ -1,57 +1,61 @@
  package com.snack_bar;
 
- import android.content.Intent;
-import android.os.Bundle;
-import android.util.SparseArray;
+ import android.os.Bundle;
+import android.view.View;
+import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.google.android.gms.vision.barcode.Barcode;
+import com.budiyev.android.codescanner.CodeScanner;
+import com.budiyev.android.codescanner.CodeScannerView;
+import com.budiyev.android.codescanner.DecodeCallback;
+import com.google.zxing.Result;
 
-import java.util.List;
-
-import info.androidhive.barcode.BarcodeReader;
-
- public class ScannerActivity extends AppCompatActivity implements BarcodeReader.BarcodeReaderListener{
-     BarcodeReader barcodeReader;
+ public class ScannerActivity extends AppCompatActivity{
+     private CodeScanner mCodeScanner;
      String emailInfo="";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_scanner);
-        // get the barcode reader instance
-        barcodeReader = (BarcodeReader) getSupportFragmentManager().findFragmentById(R.id.barcode_scanner);
-        emailInfo = getIntent().getStringExtra("email");
+        CodeScannerView scannerView = findViewById(R.id.scanner_view);
+        mCodeScanner = new CodeScanner(this, scannerView);
+        if(getIntent().hasExtra("email")){
+            emailInfo = getIntent().getStringExtra("email");
+        }
+        mCodeScanner.setDecodeCallback(new DecodeCallback() {
+            @Override
+            public void onDecoded(@NonNull final Result result) {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        LoginActivity.password.setText( result.getText());
+                        LoginActivity.email.setText(emailInfo);
+                        Toast.makeText(ScannerActivity.this, result.getText(), Toast.LENGTH_SHORT).show();
+                        finish();
+                    }
+                });
+            }
+        });
+        scannerView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                mCodeScanner.startPreview();
+            }
+        });
+
     }
-
      @Override
-     public void onScanned(Barcode barcode) {
-         // playing barcode reader beep sound
-         barcodeReader.playBeep();
-         // ticket details activity by passing barcode
-         Intent intent = new Intent(ScannerActivity.this, LoginActivity.class);
-         intent.putExtra("code", barcode.displayValue);
-         intent.putExtra("email",emailInfo);
-         startActivity(intent);
+     protected void onResume() {
+         super.onResume();
+         mCodeScanner.startPreview();
      }
 
      @Override
-     public void onScannedMultiple(List<Barcode> barcodes) {
-
+     protected void onPause() {
+         mCodeScanner.releaseResources();
+         super.onPause();
      }
 
-     @Override
-     public void onBitmapScanned(SparseArray<Barcode> sparseArray) {
-
-     }
-
-     @Override
-     public void onScanError(String errorMessage) {
-
-     }
-
-     @Override
-     public void onCameraPermissionDenied() {
-
-     }
  }

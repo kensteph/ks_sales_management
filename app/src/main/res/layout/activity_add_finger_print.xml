@@ -44,7 +44,7 @@
                 android:layout_below="@+id/finger_left1"
                 android:layout_marginLeft="20dp"
                 android:textSize="20dp"
-                android:text="EMPREINTES GAUCHE" />
+                android:text="LEFT FINGERPRINTS" />
 
         </RelativeLayout>
 
@@ -70,7 +70,7 @@
                 android:layout_below="@+id/finger_right1"
                 android:layout_marginLeft="20dp"
                 android:textSize="20dp"
-                android:text="EMPREINTES DROITE" />
+                android:text="RIGHT FINGERPRINTS" />
         </RelativeLayout>
 
         <LinearLayout
@@ -94,7 +94,7 @@
                 android:id="@+id/buttonAddFingerprint"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Enregistrer les empreintes"
+                android:text="SAVE FINGERPRINTS"
                 android:layout_marginTop="10dp"
                 />
         </LinearLayout>
