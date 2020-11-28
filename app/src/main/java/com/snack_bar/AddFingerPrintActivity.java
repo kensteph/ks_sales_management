@@ -270,6 +270,7 @@ public class AddFingerPrintActivity extends AppCompatActivity {
         List<FingerPrintTemp> temporaryList = new ArrayList<>();
 
         if(LF1!= null && LF2!= null && RF1!= null && RF2!= null && selectedEmployeeID!=0){
+            showProgress("Saving FingerPrints....",true);
             //ADD THE FINGERPRINTS TO THE LIST
             //================== LF1 ============================
             FingerPrintTemp fingerPrintTempF1 = new FingerPrintTemp();
@@ -358,6 +359,7 @@ public class AddFingerPrintActivity extends AppCompatActivity {
                 {
                     public void onClick(DialogInterface dialog, int which)
                     {
+                        showProgress("Saving FingerPrints....",true);
                         saveFingerPrintTo("LOCAL");
                     }
                 })

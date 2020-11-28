@@ -18,13 +18,19 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.FrameLayout;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.appcompat.app.ActionBar;
+import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 import androidx.core.content.ContextCompat;
+import androidx.core.view.GravityCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
 
+import com.google.android.material.navigation.NavigationView;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
@@ -70,14 +76,29 @@ public class MainActivity extends AppCompatActivity {
     private String Email;
     private String Password;
 
+    //DRAWER MENU
+    DrawerLayout drawer;
+    NavigationView navigationView;
+    FrameLayout frameLayout;
+    ActionBarDrawerToggle toggle;
+    ImageView imageView;
+    Toolbar toolbar;
+    View header;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        ActionBar actionBar = getSupportActionBar();
-        actionBar.setHomeButtonEnabled(false);
-        actionBar.setDisplayHomeAsUpEnabled(false);
-        actionBar.setTitle("Point Of Sale");
+        toolbar = (Toolbar) findViewById(R.id.toolbar);
+        //setSupportActionBar(toolbar);
+        //DRAWER MENU
+        drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        navigationView = (NavigationView) findViewById(R.id.nav_view);
+        frameLayout = (FrameLayout) findViewById(R.id.frame);
+        toggle = new ActionBarDrawerToggle(this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+        drawer.addDrawerListener(toggle);
+        toggle.syncState();
+
         //HELPER
         helper = new Helper();
         //DATABASE
@@ -109,16 +130,25 @@ public class MainActivity extends AppCompatActivity {
         buttonRetry.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-               // startScan();
+                startScan();
                 // FOR TEST 9A6060AF
-                Intent intent = new Intent(MainActivity.this, ProductsList.class);
-                intent.putExtra("EmployeeFullName","Luchano Joachim | 001-1990-877-774-299");
-                intent.putExtra("EmployeeId",3);
-                startActivity(intent);
+//                Intent intent = new Intent(MainActivity.this, ProductsList.class);
+//                intent.putExtra("EmployeeFullName","Luchano Joachim | 001-1990-877-774-299");
+//                intent.putExtra("EmployeeId",3);
+//                startActivity(intent);
             }
         });
         //LOAD ALL FINGERPRINTS FROM DB
         new LoadFingerPrintsFromDB().execute();
+    }
+
+    @Override
+    public void onBackPressed() {
+        if(drawer.isDrawerOpen(GravityCompat.START)) {
+            drawer.closeDrawer(GravityCompat.START);
+        } else {
+            super.onBackPressed();
+        }
     }
 
     @Override
@@ -182,7 +212,7 @@ public class MainActivity extends AppCompatActivity {
         fingerprint.turnOffReader();
         super.onStop();
     }
-
+//SCANNER
     Handler updateHandler = new Handler(Looper.getMainLooper()) {
         @Override
         public void handleMessage(Message msg) {
@@ -253,6 +283,7 @@ public class MainActivity extends AppCompatActivity {
                 if(matchId != 0){
                     buttonRetry.setVisibility(View.GONE);
                     Employee match = db.getEmployeeInfo(matchId);
+                    Log.d("MATCH EMP",match.toString());
                     //Toast.makeText(getApplicationContext(),"Vous etes "+match.getEmployeeId(),Toast.LENGTH_LONG).show();
                     // Launch new intent instead of loading fragment
                     intent.putExtra("EmployeeFullName",match.getFull_name()+" | "+match.getEmployee_code());
@@ -575,7 +606,7 @@ public class MainActivity extends AppCompatActivity {
             builder = new AlertDialog.Builder(MainActivity.this);
         }
         builder.setCancelable(false);
-        builder.setTitle("Sync Employee")
+        builder.setTitle("Sync Employees")
                 .setMessage("Do you really want to SYNC EMPLOYEES?")
                 .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener()
                 {

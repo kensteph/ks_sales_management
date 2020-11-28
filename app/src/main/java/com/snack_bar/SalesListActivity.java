@@ -45,7 +45,7 @@ public class SalesListActivity extends AppCompatActivity {
     SaleListAdapter saleListAdapter ;
     DatabaseHelper databaseHelper;
     private ProgressDialog dialog;
-    private Button btnSynchronizeSales;
+    public static   Button btnSynchronizeSales;
     private Helper helper;
     //SHARED PREFERENCES
     private static final String SHARED_PREF_NAME = "MY_SHARED_PREFERENCES";
@@ -129,6 +129,7 @@ public class SalesListActivity extends AppCompatActivity {
                 btnSynchronizeSales.setText("No sale to sync");
                 btnSynchronizeSales.setEnabled(false);
             }
+            emptySalesTable(false);
 
         }
     }
@@ -186,7 +187,7 @@ public class SalesListActivity extends AppCompatActivity {
         }else{
             showProgress("Sales Synchronization start....",false);
             //EMPTY THE SALES TABLE
-            emptySalesTable();
+            emptySalesTable(true);
         }
 
     }
@@ -226,6 +227,8 @@ public class SalesListActivity extends AppCompatActivity {
                        Log.e("response-success", jsonObject.getString("Accepted"));
                        //REMOVE THIS DETAILS FROM SALES DETAILS
                         databaseHelper.deleteSaleDetails(saleID,productId);
+                       //EMPTY THE SALES TABLE
+                       emptySalesTable(true);
                    }else{
                        Log.e("response-failed","SALE DETAILS DON'T SAVE");
                        //showMessage(false,"SALE DETAILS DON'T SAVE");
@@ -235,8 +238,6 @@ public class SalesListActivity extends AppCompatActivity {
                     e.printStackTrace();
                 }
                 if(position == salesList.size()){
-                    //EMPTY THE SALES TABLE
-                    emptySalesTable();
                     showProgress("Sales Synchronization start....",false);
                 }
 
@@ -251,7 +252,7 @@ public class SalesListActivity extends AppCompatActivity {
 
         });
     }
-    private void emptySalesTable() {
+    private void emptySalesTable(boolean showMessage) {
         //GET NUMBER OF LINES IN SALES_DETAILS
         numberOfSalesDetails = databaseHelper.getSalesDetailsCount();
         Log.d("SERVER", "SALES DETAILS TO SEND COUNT : " + numberOfSalesDetails);
@@ -261,8 +262,10 @@ public class SalesListActivity extends AppCompatActivity {
             salesList.clear();
             saleListAdapter.notifyDataSetChanged();
             btnSynchronizeSales.setText("No sale to sync");
+            if(showMessage){
+                showMessage(true,"Synchronization complete...");
+            }
             btnSynchronizeSales.setEnabled(false);
-            showMessage(true,"Synchronization complete...");
         }
     }
 
@@ -278,7 +281,7 @@ public class SalesListActivity extends AppCompatActivity {
         }
         builder.setCancelable(false);
         builder.setTitle("Sync Sales")
-                .setMessage("Do you really want to SYNC THOSE SALES")
+                .setMessage("Do you really want to SYNC THOSE SALES ?")
                 .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener()
                 {
                     public void onClick(DialogInterface dialog, int which)

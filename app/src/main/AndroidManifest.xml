@@ -15,16 +15,6 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".ScannerActivity"></activity>
-        <activity android:name=".LoginActivity" />
-        <activity android:name=".SyncFingerPrintToServer" />
-        <activity
-            android:name=".UploadImageToServer"
-            android:label="@string/title_activity_upload_image_to_server" />
-        <activity android:name=".ProductsList" />
-        <activity android:name=".EmployeeListActivity" />
-        <activity android:name=".SalesListActivity" />
-        <activity android:name=".AddFingerPrintActivity" />
         <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -32,6 +22,14 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity android:name=".ScannerActivity" />
+        <activity android:name=".LoginActivity" />
+        <activity android:name=".SyncFingerPrintToServer" />
+        <activity android:name=".ProductsList" />
+        <activity android:name=".EmployeeListActivity" />
+        <activity android:name=".SalesListActivity" />
+        <activity android:name=".AddFingerPrintActivity" />
+
     </application>
 
 </manifest>

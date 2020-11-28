@@ -19,6 +19,7 @@ import android.widget.Toast;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.snack_bar.R;
+import com.snack_bar.SalesListActivity;
 import com.snack_bar.database.DatabaseHelper;
 import com.snack_bar.model.SaleItemListModel;
 
@@ -45,7 +46,11 @@ public class SaleListAdapter extends RecyclerView.Adapter<SaleListAdapter.SalesV
         db=new DatabaseHelper(context);
         SaleItemListModel sales = salesList.get(position);
         holder.saleDate.setText(sales.getSaleDate());
-        holder.employee.setText(sales.getEmployeeName());
+        String employeeInfo = sales.getEmployeeName();
+        if(employeeInfo.length()>30){
+            employeeInfo = employeeInfo.substring(0,29)+"...";
+        }
+        holder.employee.setText(employeeInfo.toUpperCase());
         holder.cashier.setText(""+sales.getCashier());
         holder.description.setText(sales.getSaleDescription());
         boolean isExpandable = sales.isExpandable();
@@ -58,8 +63,8 @@ public class SaleListAdapter extends RecyclerView.Adapter<SaleListAdapter.SalesV
         });
     }
 
-    private void deleteRecord(int position,View v)
-    {
+    private void deleteRecord(int position,View v) {
+        SaleItemListModel sales = salesList.get(position);
         AlertDialog.Builder builder;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
         {
@@ -69,18 +74,29 @@ public class SaleListAdapter extends RecyclerView.Adapter<SaleListAdapter.SalesV
             builder = new AlertDialog.Builder(context);
         }
         builder.setCancelable(false);
-        builder.setTitle("Suppression vente")
-                .setMessage("Voulez-vouz supprimer ?")
+        builder.setTitle("Sale Deletion "+sales.getSaleId())
+                .setMessage("Do you want to delete this sale ? \n\n"+sales.getEmployeeName()+"\n"+sales.getSaleDescription())
                 .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener()
                 {
                     public void onClick(DialogInterface dialog, int which)
                     {
-                        SaleItemListModel sales = salesList.get(position);
                         db.deleteSale(sales.getSaleId());
-                        //new DeleteSale().execute(sales.getSaleId());
                         salesList.remove(position);
                         notifyDataSetChanged();
-                        Toast.makeText(context,"Vente "+sales.getSaleDate(),Toast.LENGTH_LONG).show();
+                        int nbSales = salesList.size();
+                        String text = "";
+                        if(nbSales >1){
+                            text = nbSales+" Sales to Sync";
+                        }else{
+                            if(nbSales==0){
+                                text = "No Sale to Sync";
+                                SalesListActivity.btnSynchronizeSales.setEnabled(false);
+                            }else{
+                                text = nbSales+" Sale to Sync";
+                            }
+                        }
+                        SalesListActivity.btnSynchronizeSales.setText(text);
+                        Toast.makeText(context,"SALE DELETED ID : "+sales.getSaleId(),Toast.LENGTH_LONG).show();
                         Log.d("DELETE", "onClick: "+sales.toString());
                     }
                 })

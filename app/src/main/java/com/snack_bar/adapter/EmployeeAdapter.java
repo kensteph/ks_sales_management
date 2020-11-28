@@ -20,6 +20,7 @@ import java.util.List;
 public class EmployeeAdapter extends RecyclerView.Adapter<EmployeeAdapter.ViewHolder >  {
     private List<Employee> employees;
     private Context context;
+    String employeeInfo;
     public EmployeeAdapter(Context context,List<Employee> employees) {
         this.employees = employees;
         this.context=context;
@@ -35,12 +36,15 @@ public class EmployeeAdapter extends RecyclerView.Adapter<EmployeeAdapter.ViewHo
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
         Employee employee = employees.get(position);
-        String employeeInfo=employee.getEmployee_prenom()+" "+employee.getEmployee_nom()+" | "+employee.getEmployee_code();
-        holder.textViewName.setText(employeeInfo);
+        employeeInfo = employee.getEmployee_prenom()+" "+employee.getEmployee_nom()+" | "+employee.getEmployee_code();
+        if(employeeInfo.length()>25){
+            employeeInfo = employeeInfo.substring(0,25)+"...";
+        }
+        holder.textViewName.setText(employeeInfo.toUpperCase());
         holder.addFingerPrint.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Toast.makeText(view.getContext(),"Prise d'empreintes pour "+employeeInfo,Toast.LENGTH_LONG).show();
+                Toast.makeText(view.getContext(),"FINGERPRINTS FOR "+employeeInfo,Toast.LENGTH_LONG).show();
                 Intent intent =new Intent(context, AddFingerPrintActivity.class);
                 intent.putExtra("Employe", employee);
                 context.startActivity(intent);

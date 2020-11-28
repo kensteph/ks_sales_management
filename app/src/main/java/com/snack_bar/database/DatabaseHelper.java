@@ -24,7 +24,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     private Context context;
     private final String TAG = "INIT_DB";
     private static final int databaseVersion = 1;
-    private static final String databaseName = "dbKSSM";
+    private static final String databaseName = "POS";
     private Helper helper;
     // Table Names
     private static final String TABLE_CATEGORIES = "categories";
@@ -531,10 +531,12 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         while(cursor2.moveToNext()) {
             String templateBase64 = cursor2.getString(cursor2.getColumnIndexOrThrow("template"));
             String fingerPrintImageBase64 = cursor2.getString(cursor2.getColumnIndexOrThrow("empreinte"));
+            String finger = cursor2.getString(cursor2.getColumnIndexOrThrow("empreinte_nom"));
             int employeeId = cursor2.getInt(cursor2.getColumnIndexOrThrow("employe_id"));
             FingerPrintTemp fp = new FingerPrintTemp();
             fp.setEmployeeId(employeeId);
             fp.setFingerPrintTemplateBase64(templateBase64);
+            fp.setFinger(finger);
             fp.setFingerPrintImageBase64(fingerPrintImageBase64);
             fingerPrintTmp.add(fp);
         }

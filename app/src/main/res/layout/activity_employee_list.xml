@@ -10,7 +10,7 @@
         android:id="@+id/editTextSearch"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Rechercher..."
+        android:hint="Search..."
         tools:layout_constraintTop_creator="1"
         tools:layout_constraintRight_creator="1"
         android:layout_marginStart="8dp"

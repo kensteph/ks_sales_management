@@ -184,16 +184,16 @@ private String Password;
         JsonObject obj = new JsonObject();
             login.addProperty ("Email",Email);
             login.addProperty("Password",Password);
-            obj.addProperty("EmployeId", 3);
+            obj.addProperty("EmployeId", fpT.getEmployeeId());
             obj.addProperty("Finger", fpT.getFinger());
             obj.addProperty("FingerPrint",fpT.getFingerPrintImageBase64());
             obj.addProperty("Template", fpT.getFingerPrintTemplateBase64());
             obj.add("Login",login);
             String data = obj.toString();
-            //Log.d("SERVER", "JSON : " + data);
-           postDataToServer(obj,pos);
+            Log.d("SERVER", "JSON : " + data);
+           postDataToServer(obj,pos,fpT.getEmployeeId());
     }
-    private void postDataToServer(JsonObject obj,int pos){
+    private void postDataToServer(JsonObject obj,int pos,int employeeID){
         // Using the Retrofit
         ApiInterface apiService =
                 ApiClient.getClient().create(ApiInterface.class);
@@ -203,17 +203,28 @@ private String Password;
 
             @Override
             public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
-                try{
-                    Log.e("response-success", response.body().toString());
-                    if(pos==temporaryFingerPrints.size()){
-                        showProgress("Fingerprints Synchronization complete.",false);
-                        //EMPTY TEMPORARY FINGERPRINTS TABLE
-                        emptyFingerPrintsTable();
+
+                JSONObject jsonObject = null;
+                try {
+                    jsonObject = new JSONObject(new Gson().toJson(response.body()));
+                    if(jsonObject.has("Accepted")){ //REQUEST SUCCESSFUL
+                        Log.e("response-success", jsonObject.getString("Accepted"));
+                        //REMOVE THIS
+                        db.deleteTemporaryFingerPrints(employeeID);
+                    }else{
+                        Log.e("response-failed","SALE DETAILS DON'T SAVE");
+                        //showMessage(false,"SALE DETAILS DON'T SAVE");
                     }
-                }catch (Exception e){
+
+                } catch (JSONException e) {
                     e.printStackTrace();
-                    showMessage(false,e.getMessage());
                 }
+                if(pos==temporaryFingerPrints.size()){
+                    emptyFingerPrintsTable();
+                    showProgress("Fingerprints Synchronization complete.",false);
+                    showMessage(true,"Fingerprints Synchronization complete");
+                }
+
             }
 
             @Override
