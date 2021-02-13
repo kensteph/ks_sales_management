@@ -184,8 +184,11 @@ public class SalesListActivity extends AppCompatActivity {
                 //SALE DETAILS
                 List<Order> saleDetails= new ArrayList<>();
                 saleDetails=sale.getItem();
+                int nbLines = saleDetails.size();
+                int posDetails = 1;
                 for (Order sd : saleDetails) {
-                    prepareJSON(sale.getEmployee(),sale.getSaleId(),sd,sale.getSaleDate(),position);
+                    prepareJSON(sale.getEmployee(),sale.getSaleId(),sd,sale.getSaleDate(),position,nbLines,posDetails);
+                    posDetails++;
                 }
                 Log.d("SERVER", "SALES PROCESSING ID  : " + sale.getSaleId());
                 position++;
@@ -197,7 +200,7 @@ public class SalesListActivity extends AppCompatActivity {
         }
 
     }
-    private void prepareJSON(int employeeID,int saleID,Order order,String date,int position){
+    private void prepareJSON(int employeeID,int saleID,Order order,String date,int position,int nbLines,int posDetails){
         JsonObject login = new JsonObject();
         JsonObject obj = new JsonObject();
         login.addProperty ("Email",Email);
@@ -213,10 +216,10 @@ public class SalesListActivity extends AppCompatActivity {
         obj.add("Login",login);
         String data = obj.toString();
         Log.d("SERVER", "JSON : " + data);
-        postDataToServer(obj,saleID,productId,position);
+        postDataToServer(obj,saleID,productId,position,nbLines,posDetails);
 
     }
-    private void postDataToServer(JsonObject obj,int saleID,int productId,int position){
+    private void postDataToServer(JsonObject obj,int saleID,int productId,int position,int nbLines,int posDetails){
         // Using the Retrofit
         ApiInterface apiService =
                 ApiClient.getClient().create(ApiInterface.class);
@@ -230,10 +233,14 @@ public class SalesListActivity extends AppCompatActivity {
                 try {
                     jsonObject = new JSONObject(new Gson().toJson(response.body()));
                    if(jsonObject.has("Accepted")){ //REQUEST SUCCESSFUL
+                       Log.d("SYNC SALES", "POS DETAIL/NB LINES: "+posDetails+"/"+nbLines);
                        Log.e("response-success", jsonObject.getString("Accepted"));
                        //REMOVE THIS DETAILS FROM SALES DETAILS
                         databaseHelper.deleteSaleDetails(saleID,productId);
-                       //EMPTY THE SALES TABLE
+                       //DELETE THIS SALE
+                       if(posDetails == nbLines){ //If the last line
+                           databaseHelper.deleteSale(saleID);
+                       }
                       // emptySalesTable(true);
                    }else{
                        Log.e("response-failed","SALE DETAILS DON'T SAVE");

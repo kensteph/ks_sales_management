@@ -130,12 +130,12 @@ public class MainActivity extends AppCompatActivity {
         buttonRetry.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                startScan();
+                //startScan();
                 // FOR TEST 9A6060AF
-//                Intent intent = new Intent(MainActivity.this, ProductsList.class);
-//                intent.putExtra("EmployeeFullName","Luchano Joachim | 001-1990-877-774-299");
-//                intent.putExtra("EmployeeId",3);
-//                startActivity(intent);
+                Intent intent = new Intent(MainActivity.this, ProductsList.class);
+                intent.putExtra("EmployeeFullName","Luchano Joachim | 001-1990-877-774-299");
+                intent.putExtra("EmployeeId",3);
+                startActivity(intent);
             }
         });
         //LOAD ALL FINGERPRINTS FROM DB
