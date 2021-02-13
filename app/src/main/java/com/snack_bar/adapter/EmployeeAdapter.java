@@ -36,7 +36,7 @@ public class EmployeeAdapter extends RecyclerView.Adapter<EmployeeAdapter.ViewHo
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
         Employee employee = employees.get(position);
-        employeeInfo = employee.getEmployee_prenom()+" "+employee.getEmployee_nom()+" | "+employee.getEmployee_code();
+        employeeInfo = employee.getEmployee_prenom()+" "+employee.getEmployee_nom()+" | "+employee.getEmployee_id();
         if(employeeInfo.length()>25){
             employeeInfo = employeeInfo.substring(0,25)+"...";
         }

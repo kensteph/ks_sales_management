@@ -52,7 +52,7 @@ public class AddFingerPrintActivity extends AppCompatActivity {
         Intent dataFromActivity = getIntent();
         Employee employee = (Employee) dataFromActivity.getSerializableExtra("Employe");
         selectedEmployeeID=employee.getEmployee_id();
-        String employeeInfo=employee.getEmployee_prenom()+" "+employee.getEmployee_nom()+" | "+employee.getEmployee_code()+" | "+selectedEmployeeID;
+        String employeeInfo=employee.getEmployee_prenom()+" "+employee.getEmployee_nom()+" | "+selectedEmployeeID;
         getSupportActionBar().setTitle(employeeInfo);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         //HELPER

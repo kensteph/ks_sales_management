@@ -6,7 +6,6 @@ import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -53,6 +52,7 @@ public class ProductListAdapter extends RecyclerView.Adapter<ProductListAdapter.
                 .load(product.url)
                 .into(holder.productImage);
         holder.productName.setText(product.name);
+        holder.productPrice.setText(String.format("%.2f", product.unitPrice));
         //CLICK ON THE CARD
         holder.cardItem.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -81,13 +81,14 @@ public class ProductListAdapter extends RecyclerView.Adapter<ProductListAdapter.
 
     public class ProductsVH extends RecyclerView.ViewHolder {
         ImageView productImage;
-        TextView productName;
+        TextView productName,productPrice;
         CardView cardItem;
 
         public ProductsVH(View itemView) {
             super(itemView);
             productImage = (ImageView) itemView.findViewById(R.id.productImage);
             productName = (TextView) itemView.findViewById(R.id.productName);
+            productPrice = (TextView) itemView.findViewById(R.id.productPrice);
             cardItem = (CardView) itemView.findViewById(R.id.card_view);
         }
     }

@@ -38,7 +38,8 @@ public class ProductsList extends AppCompatActivity implements ProductListAdapte
     RecyclerView recyclerView;
     private Button saveOrderQuick;
     private LinearLayout llBtnQuickSave;
-    private TextView txtCount;
+    private TextView txtCount,totalCartDisplay;
+    private Double totalCart;
     private RelativeLayout rlCart;
     private ProgressDialog dialog;
     private int employeeSelectedID=0;
@@ -68,12 +69,13 @@ public class ProductsList extends AppCompatActivity implements ProductListAdapte
         //LOAD COMPONENT
         recyclerView = (RecyclerView) findViewById(R.id.rvProductList);
         recyclerView.setHasFixedSize(true);
-        recyclerView.setLayoutManager(new GridLayoutManager(this,3));
+        recyclerView.setLayoutManager(new GridLayoutManager(this,4));
         adapter = new ProductListAdapter(productList, this,ProductsList.this);
         recyclerView.setAdapter(adapter);
         llBtnQuickSave = (LinearLayout) findViewById(R.id.llBtnQuickSave);
         saveOrderQuick = (Button)  findViewById(R.id.btnSaveOrderQuick);
         llBtnQuickSave.setVisibility(View.GONE);
+        totalCartDisplay = findViewById(R.id.total_cart);
         saveOrderQuick.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -139,8 +141,14 @@ public class ProductsList extends AppCompatActivity implements ProductListAdapte
 
     @Override
     public void onIncreaseDecreaseCallback() {
-        updateOrderTotal();
-        updateBadge();
+        Log.d("CART","==========ITEM IN CART AFTER CHANGE ============== ");
+        for (Order order : orderList){
+            Item item = order.item;
+            Log.d("ADD ITEM","ITEM ADDED : "+order.quantity+" "+item.name);
+        }
+        Log.d("CART","==========ITEM IN CART AFTER CHANGE ============== ");
+        updateOrderTotal(orderList);
+        updateBadge(orderList);
     }
 
     //LOAD PRODUCTS FROM DB
@@ -170,7 +178,7 @@ public class ProductsList extends AppCompatActivity implements ProductListAdapte
     //============================================  OPERATION RELATIVE AU CART ==================================================
     private void addProductToCart(Item item, int quantity) {
         boolean isAdded = false;
-Log.d("ADD ITEM","ITEM ADDED : "+quantity+" "+item.name);
+        Log.d("ADD ITEM","ITEM ADDED : "+quantity+" "+item.name);
         for (Order order : orderList)
         {
             if (order.item.id == item.id)
@@ -192,10 +200,10 @@ Log.d("ADD ITEM","ITEM ADDED : "+quantity+" "+item.name);
 
 //        orderAdapter.notifyDataSetChanged();
 //        rvOrder.smoothScrollToPosition(orderList.size() - 1);
-        updateOrderTotal();
-        updateBadge();
+        updateOrderTotal(orderList);
+        updateBadge(orderList);
     }
-    private void updateBadge() {
+    private void updateBadge(List<Order> orderList) {
         if (orderList.size() == 0)
         {
             txtCount.setVisibility(View.INVISIBLE);
@@ -209,26 +217,28 @@ Log.d("ADD ITEM","ITEM ADDED : "+quantity+" "+item.name);
             }
         }
     }
-    private double getOrderTotal() {
+    private double getOrderTotal(List<Order> orderList) {
         double total = 0.0;
 
         for (Order order : orderList)
         {
             total += order.extendedPrice;
+            Log.d("TOT",order.item.name+" UNIT PRICE "+order.item.unitPrice+" QTY : "+order.quantity+" TOTAL : "+order.extendedPrice);
         }
-
+        Log.d("TOT", "GRAND TOTAL: "+total);
         return total;
     }
-    private void updateOrderTotal() {
-        double total = getOrderTotal();
-//        txtTotal.setText(String.format("%.2f", total));
-//        totalCart = total;
+    private void updateOrderTotal(List<Order> orderList) {
+        totalCart= getOrderTotal(orderList);
+        totalCartDisplay.setText(String.format("%.2f", totalCart));
     }
     private void displayCart() {
         AlertDialog.Builder builder = new AlertDialog.Builder(ProductsList.this);
         View view = getLayoutInflater().inflate(R.layout.cart_layout, null);
         final RecyclerView rvCart = view.findViewById(R.id.rvOrders);
         final Button btnSaveOrder = view.findViewById(R.id.btnSaveOrder);
+
+
         if(orderList.size() == 0){
             btnSaveOrder.setVisibility(View.GONE);
             //dialog.dismiss();
@@ -259,7 +269,7 @@ Log.d("ADD ITEM","ITEM ADDED : "+quantity+" "+item.name);
         protected Boolean doInBackground(Void... params)
         {
             //employeeSelectedID=helper.getRandomId(100,4000);
-            boolean rep = db.saveSaleDetails(orderList,materialID,employeeSelectedID,employeeCashierID,0.0);
+            boolean rep = db.saveSaleDetails(orderList,materialID,employeeSelectedID,employeeCashierID,totalCart);
             return rep;
         }
 
@@ -301,8 +311,8 @@ Log.d("ADD ITEM","ITEM ADDED : "+quantity+" "+item.name);
     private void clearAll() {
         orderList.clear();
         orderAdapter.notifyDataSetChanged();
-        updateBadge();
-        updateOrderTotal();
+        updateBadge(orderList);
+        updateOrderTotal(orderList);
     }
     //Shows a message by using Snackbar
     private void showMessage(Boolean isSuccessful, String message) {

@@ -24,7 +24,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     private Context context;
     private final String TAG = "INIT_DB";
     private static final int databaseVersion = 1;
-    private static final String databaseName = "POS";
+    private static final String databaseName = "POS1";
     private Helper helper;
     // Table Names
     private static final String TABLE_CATEGORIES = "categories";
@@ -250,7 +250,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         }
 
         cursor2.close();
-        db.close();
         return listItems;
     }
     public List<SaleItemListModel> getAllSales() {
@@ -270,15 +269,16 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             String description="------------------------------------------------\n";
             for(Order order : details){
                 Item product = order.item;
-                description+=""+order.quantity+" "+product.name+" "+product.unitPrice+"\n";
+                description+=" "+order.quantity+" "+product.name+"  PRICE : "+product.unitPrice+"\n";
             }
-            description+="------------------------------------------------";
+            description+="------------------------------------------------\n";
+            description+=" TOTAL : "+priceTotal+"\n";
             //INFO EMPLOYEE
             String prenom = cursor2.getString(cursor2.getColumnIndexOrThrow("employe_prenom"));
             String nom = cursor2.getString(cursor2.getColumnIndexOrThrow("employe_nom"));
             String code = cursor2.getString(cursor2.getColumnIndexOrThrow("employe_code"));
             int employe_id = cursor2.getInt(cursor2.getColumnIndexOrThrow("employe_id"));
-            String full_name = saleId+" - "+prenom+" "+nom+" | "+code;
+            String full_name = saleId+" - "+prenom+" "+nom+" | "+employe_id;
             sale.setEmployeeName(full_name);
             sale.setEmployee(employe_id);
             sale.setCashier(cursor2.getInt(cursor2.getColumnIndexOrThrow("vendeur_id")));
@@ -291,7 +291,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         }
 
         cursor2.close();
-        db.close();
         return saleList;
     }
     //GET SALES DESCRIPTION
@@ -314,7 +313,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         }
 
         cursor2.close();
-        db.close();
         return details;
     }
     //GET SALES DESCRIPTION
@@ -342,7 +340,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         }
 
         cursor2.close();
-        db.close();
         return nb;
     }
     //DELETE SALES DETAILS
@@ -405,7 +402,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         }
 
         cursor2.close();
-        db.close();
         return nb;
     }
     //GET SALES DESCRIPTION
@@ -442,7 +438,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         }
         Log.d("FINGERPRINT1","FOUND : "+fingerPrintList.size());
         cursor2.close();
-        db.close();
         return fingerPrintList;
     }
     //GET ALL EMPLOYEES FROM THE DB
@@ -462,7 +457,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         }
         Log.d("EMPLOYEE DATA","FOUND : "+employeeList.size());
         cursor2.close();
-        db.close();
         return employeeList;
     }
     //GET ALL EMPLOYEES WITH NO FINGER PRINTS FROM THE DB
@@ -482,7 +476,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         }
         Log.d("EMPLOYEE DATA","FOUND : "+employeeList.size());
         cursor2.close();
-        db.close();
         return employeeList;
     }
     //GET SINGLE EMPLOYEES FROM THE DB
@@ -501,7 +494,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         }
         Log.d("EMPLOYEE DATA","FOUND : "+employee.toString());
         cursor2.close();
-        db.close();
         return employee;
     }
     //GET ONLY FINGERPRINT TEMPLATE
@@ -518,7 +510,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         }
         Log.d("FINGERPRINT1","FOUND : "+fingerPrintTemplates.size());
         cursor2.close();
-        db.close();
         return fingerPrintTemplates;
     }
 
@@ -542,7 +533,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         }
         Log.d("FINGERPRINT1","FOUND : "+fingerPrintTmp.size());
         cursor2.close();
-        db.close();
         return fingerPrintTmp;
     }
 

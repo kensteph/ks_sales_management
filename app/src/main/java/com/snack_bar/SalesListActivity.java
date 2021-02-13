@@ -106,7 +106,13 @@ public class SalesListActivity extends AppCompatActivity {
 
         @Override
         protected List<SaleItemListModel> doInBackground(Void... voids) {
-            return databaseHelper.getAllSales();
+            List<SaleItemListModel> ls = null;
+            try{
+                ls = databaseHelper.getAllSales();
+            }catch (IllegalStateException ex){
+                Log.d("SALES-LIST", "doInBackground: "+ex);
+            }
+            return ls;
         }
 
         @Override
@@ -228,7 +234,7 @@ public class SalesListActivity extends AppCompatActivity {
                        //REMOVE THIS DETAILS FROM SALES DETAILS
                         databaseHelper.deleteSaleDetails(saleID,productId);
                        //EMPTY THE SALES TABLE
-                       emptySalesTable(true);
+                      // emptySalesTable(true);
                    }else{
                        Log.e("response-failed","SALE DETAILS DON'T SAVE");
                        //showMessage(false,"SALE DETAILS DON'T SAVE");
@@ -239,6 +245,13 @@ public class SalesListActivity extends AppCompatActivity {
                 }
                 if(position == salesList.size()){
                     showProgress("Sales Synchronization start....",false);
+                    //EMPTY THE SALES TABLE
+                    emptySalesTable(true);
+                    Log.e("DONE","SALE SYNC DONE....");
+                    salesList.clear();
+                    saleListAdapter.notifyDataSetChanged();
+                    btnSynchronizeSales.setText("No sale to sync");
+                    btnSynchronizeSales.setEnabled(false);
                 }
 
             }
@@ -298,4 +311,5 @@ public class SalesListActivity extends AppCompatActivity {
                 })
                 .show();
     }
+
 }

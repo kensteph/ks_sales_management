@@ -94,6 +94,7 @@ public class LoginActivity extends AppCompatActivity {
                     showProgress("Authentication.",false);
                     showMessage(false,"Your email or password is incorrect");
                     Log.e("response-success", response.message());
+                    Log.e("response-success", response.toString());
                 }
             }
 
@@ -103,6 +104,7 @@ public class LoginActivity extends AppCompatActivity {
                 Log.e("response-failure", call.toString());
                 showProgress("Authentication",false);
                 showMessage(false,t.toString());
+                Log.e("response-failure", t.toString());
             }
 
         });

@@ -286,7 +286,7 @@ public class MainActivity extends AppCompatActivity {
                     Log.d("MATCH EMP",match.toString());
                     //Toast.makeText(getApplicationContext(),"Vous etes "+match.getEmployeeId(),Toast.LENGTH_LONG).show();
                     // Launch new intent instead of loading fragment
-                    intent.putExtra("EmployeeFullName",match.getFull_name()+" | "+match.getEmployee_code());
+                    intent.putExtra("EmployeeFullName",match.getFull_name()+" | "+match.getEmployee_id());
                     intent.putExtra("EmployeeId",match.getEmployee_id());
                     startActivity(intent);
                 }else{
@@ -441,7 +441,7 @@ public class MainActivity extends AppCompatActivity {
                     Log.d("SERVER REP","REFERENCES COUNT : "+array.length());
                     for (int i = 0; i < array.length(); i++) {
                          int employeeID = array.getInt(i);
-                         getEmployeeInfo(employeeID);
+                         getEmployeeInfo(employeeID,array.length(),i+1);
                     }
                 } catch (JSONException e) {
                     e.printStackTrace();
@@ -461,7 +461,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     //GET EMPLOYEES INFO
-    private void getEmployeeInfo(int employeeRef){
+    private void getEmployeeInfo(int employeeRef,int employeeCount,int position){
         ApiInterface apiService =
                 ApiClient.getClient().create(ApiInterface.class);
         Call<JsonObject> call = apiService.getEmployee(employeeRef,Email,Password);
@@ -494,9 +494,17 @@ public class MainActivity extends AppCompatActivity {
                         byte[] tp = helper.base64ToByteArray(data.getString("Template"));
                         db.saveFingerPrintsFromServer(employee_ID,finger,fp,tp);
                         Log.d("SERVER 2","EMPLOYE ID : "+employee_ID);
+                        Log.d("POSITION "+position,"CURRENT POS : "+employeeCount);
+                        if(position == employeeCount){
+                            showProgress("",false);
+                            showMessage(true, "Synchronization complete...");
+                            //RELOAD THE MAIN SCREEN
+                            finish();
+                            startActivity(getIntent());
+                        }
+
                     }
-                    showProgress("",false);
-                    showMessage(true, "Synchronization complete...");
+
                 } catch (JSONException e) {
                     e.printStackTrace();
                    Log.d("SERVER ERR",e.toString());

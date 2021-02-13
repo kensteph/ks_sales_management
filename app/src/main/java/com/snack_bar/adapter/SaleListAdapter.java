@@ -47,11 +47,11 @@ public class SaleListAdapter extends RecyclerView.Adapter<SaleListAdapter.SalesV
         SaleItemListModel sales = salesList.get(position);
         holder.saleDate.setText(sales.getSaleDate());
         String employeeInfo = sales.getEmployeeName();
-        if(employeeInfo.length()>30){
-            employeeInfo = employeeInfo.substring(0,29)+"...";
-        }
+//        if(employeeInfo.length()>30){
+//            employeeInfo = employeeInfo.substring(0,29)+"...";
+//        }
         holder.employee.setText(employeeInfo.toUpperCase());
-        holder.cashier.setText(""+sales.getCashier());
+        holder.cashier.setText("");
         holder.description.setText(sales.getSaleDescription());
         boolean isExpandable = sales.isExpandable();
         holder.myExpandableLayout.setVisibility(isExpandable ? View.VISIBLE : View.GONE);

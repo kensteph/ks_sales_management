@@ -10,7 +10,6 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import androidx.cardview.widget.CardView;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
@@ -58,12 +57,19 @@ public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.OrdersVH> {
                 .into(holder.productImage);
         holder.productName.setText(item.name);
         holder.qty.setText(String.valueOf(order.quantity));
+        holder.price.setText(String.valueOf(item.unitPrice));
         //CLICK ON THE INCREASE BUTTON
         holder.btnIncrease.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                order.quantity++; //INCREASE THE QTY
-                holder.qty.setText(String.valueOf(order.quantity));
+                //INCREASE THE QTY
+                int newQty = order.quantity+1;
+                //NEW SUBTOTAL
+                Double subTotal = newQty * order.item.unitPrice;
+                order.quantity=newQty;
+                order.extendedPrice=subTotal;
+
+                holder.qty.setText(String.valueOf(newQty));
                 notifyDataSetChanged();
                 //TELL THE FUNCTION IN THE ACTIVITY YOU CAN INCREASE
                 orderCallback.onIncreaseDecreaseCallback();
@@ -74,8 +80,14 @@ public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.OrdersVH> {
         holder.btnDecrease.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                order.quantity--; //DECREASE THE QTY
-                holder.qty.setText(String.valueOf(order.quantity));
+                //INCREASE THE QTY
+                int newQty = order.quantity-1;
+                //NEW SUBTOTAL
+                Double subTotal = newQty * order.item.unitPrice;
+                order.quantity=newQty;
+                order.extendedPrice=subTotal;
+
+                holder.qty.setText(String.valueOf(newQty));
                 //IF THE NUMBER BECOME 0 THEN REMOVE THIS ITEM FROM CART
                 if (order.quantity == 0){
                     ordersList.remove(position);
@@ -94,7 +106,7 @@ public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.OrdersVH> {
     public class OrdersVH extends RecyclerView.ViewHolder {
         ImageButton btnIncrease,btnDecrease;
         ImageView productImage;
-        TextView productName,qty;
+        TextView productName,qty,price;
 
         public OrdersVH(View itemView) {
             super(itemView);
@@ -103,6 +115,7 @@ public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.OrdersVH> {
             btnIncrease = (ImageButton) itemView.findViewById(R.id.btnIncrease);
             btnDecrease = (ImageButton) itemView.findViewById(R.id.btnDecrease);
             qty = (TextView) itemView.findViewById(R.id.qty);
+            price = (TextView) itemView.findViewById(R.id.productPrice);
         }
     }
 
