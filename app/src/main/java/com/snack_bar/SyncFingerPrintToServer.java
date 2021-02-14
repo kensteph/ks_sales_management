@@ -36,18 +36,18 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 public class SyncFingerPrintToServer extends AppCompatActivity {
-private DatabaseHelper db ;
-private int nbFingerPrintsToSync=0;
-private TextView nbFp;
-private ProgressDialog dialog;
-private Button btnSynchronizeFingerPrints;
-private List<FingerPrintTemp> temporaryFingerPrints;
-private Helper helper;
-//SHARED PREFERENCES
-private static final String SHARED_PREF_NAME = "MY_SHARED_PREFERENCES";
-SharedPreferences sp;
-private String Email;
-private String Password;
+    private DatabaseHelper db;
+    private int nbFingerPrintsToSync = 0;
+    private TextView nbFp;
+    private ProgressDialog dialog;
+    private Button btnSynchronizeFingerPrints;
+    private List<FingerPrintTemp> temporaryFingerPrints;
+    private Helper helper;
+    //SHARED PREFERENCES
+    private static final String SHARED_PREF_NAME = "MY_SHARED_PREFERENCES";
+    SharedPreferences sp;
+    private String Email;
+    private String Password;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,17 +59,17 @@ private String Password;
 
         //GET INFO FROM SHARED PREFERENCES
         sp = getSharedPreferences(SHARED_PREF_NAME, MODE_PRIVATE);
-        Email = sp.getString("email","");
-        Password = sp.getString("password","");
+        Email = sp.getString("email", "");
+        Password = sp.getString("password", "");
 
         nbFingerPrintsToSync = db.getFingerCount();
         temporaryFingerPrints = new ArrayList<>();
         temporaryFingerPrints = db.getTemporaryFingers();
         nbFp = (TextView) findViewById(R.id.nbFpSync);
-        nbFp.setText(nbFingerPrintsToSync+" Fingerprints to sync");
+        nbFp.setText(nbFingerPrintsToSync + " Fingerprints to sync");
 
         btnSynchronizeFingerPrints = findViewById(R.id.btnSynchronizeFingerPrints);
-        if(nbFingerPrintsToSync==0){
+        if (nbFingerPrintsToSync == 0) {
             btnSynchronizeFingerPrints.setEnabled(false);
         }
         btnSynchronizeFingerPrints.setOnClickListener(new View.OnClickListener() {
@@ -90,48 +90,45 @@ private String Password;
         return super.onOptionsItemSelected(item);
     }
 
-    private void showProgress(String msg,boolean show) {
-        if (dialog == null)
-        {
+    private void showProgress(String msg, boolean show) {
+        if (dialog == null) {
             dialog = new ProgressDialog(SyncFingerPrintToServer.this);
             dialog.setMessage(msg);
             dialog.setCancelable(false);
         }
 
-        if (show)
-        {
+        if (show) {
             dialog.show();
-        } else
-        {
+        } else {
             dialog.dismiss();
         }
     }
+
     //Shows a message by using Snackbar
     private void showMessage(Boolean isSuccessful, String message) {
         Snackbar snackbar = Snackbar.make(findViewById(android.R.id.content), message, Snackbar.LENGTH_LONG);
 
-        if (isSuccessful)
-        {
+        if (isSuccessful) {
             snackbar.getView().setBackgroundColor(ContextCompat.getColor(SyncFingerPrintToServer.this, R.color.colorAccent));
-        } else
-        {
+        } else {
             snackbar.getView().setBackgroundColor(ContextCompat.getColor(SyncFingerPrintToServer.this, R.color.design_default_color_error));
         }
 
         snackbar.show();
     }
+
     //UPLOAD FINGERPRINTS TO SERVER
     private void postFingerPrints(String data) {
-        showProgress("Synchronisation des ventes.....",true);
+        showProgress("Synchronisation des ventes.....", true);
         List<Integer> salesSucceedID;
         ApiInterface apiService =
                 ApiClient.getClient().create(ApiInterface.class);
-        Call<JsonObject> call = apiService.UploadFingerPrintsToServer (data);
+        Call<JsonObject> call = apiService.UploadFingerPrintsToServer(data);
         call.enqueue(new Callback<JsonObject>() {
             @Override
             public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
-                Log.d("SERVER REP",response.body().toString());
-                int nbSuccess=0;
+                Log.d("SERVER REP", response.body().toString());
+                int nbSuccess = 0;
                 //Get the response
                 JSONObject jsonObject = null;
                 try {
@@ -148,57 +145,59 @@ private String Password;
                     e.printStackTrace();
                     Log.d(" responce => ", e.toString());
                 }
-                if(nbSuccess==0) {
-                    Toast.makeText(getApplicationContext()," Aucune vente n'a été enregistrée...", Toast.LENGTH_LONG).show();
-                }else{
-                    Toast.makeText(getApplicationContext(), nbSuccess+" Ventes ont été enregistrées avec succès...", Toast.LENGTH_LONG).show();
+                if (nbSuccess == 0) {
+                    Toast.makeText(getApplicationContext(), " Aucune vente n'a été enregistrée...", Toast.LENGTH_LONG).show();
+                } else {
+                    Toast.makeText(getApplicationContext(), nbSuccess + " Ventes ont été enregistrées avec succès...", Toast.LENGTH_LONG).show();
                     temporaryFingerPrints.clear();
                     btnSynchronizeFingerPrints.setText("Aucune vente à synchroniser");
                 }
 
                 //Log.d("SERVER",jsonObject.toString());
-                showProgress("Synchronisation des ventes terminée.....",false);
+                showProgress("Synchronisation des ventes terminée.....", false);
             }
 
             @Override
             public void onFailure(Call<JsonObject> call, Throwable t) {
-                showProgress("Synchronisation des ventes terminée.....",false);
-                Toast.makeText(getApplicationContext(), t.toString()+" | "+call.toString(), Toast.LENGTH_LONG).show();
-                Log.d("SERVER",t.toString());
+                showProgress("Synchronisation des ventes terminée.....", false);
+                Toast.makeText(getApplicationContext(), t.toString() + " | " + call.toString(), Toast.LENGTH_LONG).show();
+                Log.d("SERVER", t.toString());
             }
 
         });
     }
+
     //PREPARE DATA TO SENT
-    private void saveFingerPrintsToServer(List<FingerPrintTemp> listFingerPrints){
-        int pos=1;
-        for (FingerPrintTemp fpT : listFingerPrints)
-        {
-            testSendFingerPrintToServer(fpT,pos);
+    private void saveFingerPrintsToServer(List<FingerPrintTemp> listFingerPrints) {
+        int pos = 1;
+        for (FingerPrintTemp fpT : listFingerPrints) {
+            testSendFingerPrintToServer(fpT, pos);
             pos++;
         }
     }
+
     //SERVER SIDE
-    private void testSendFingerPrintToServer(FingerPrintTemp fpT,int pos){
+    private void testSendFingerPrintToServer(FingerPrintTemp fpT, int pos) {
         JsonObject login = new JsonObject();
         JsonObject obj = new JsonObject();
-            login.addProperty ("Email",Email);
-            login.addProperty("Password",Password);
-            obj.addProperty("EmployeId", fpT.getEmployeeId());
-            obj.addProperty("Finger", fpT.getFinger());
-            obj.addProperty("FingerPrint",fpT.getFingerPrintImageBase64());
-            obj.addProperty("Template", fpT.getFingerPrintTemplateBase64());
-            obj.add("Login",login);
-            String data = obj.toString();
-            Log.d("SERVER", "JSON : " + data);
-           postDataToServer(obj,pos,fpT.getEmployeeId());
+        login.addProperty("Email", Email);
+        login.addProperty("Password", Password);
+        obj.addProperty("EmployeId", fpT.getEmployeeId());
+        obj.addProperty("Finger", fpT.getFinger());
+        obj.addProperty("FingerPrint", fpT.getFingerPrintImageBase64());
+        obj.addProperty("Template", fpT.getFingerPrintTemplateBase64());
+        obj.add("Login", login);
+        String data = obj.toString();
+        Log.d("SERVER", "JSON : " + data);
+        postDataToServer(obj, pos, fpT.getEmployeeId());
     }
-    private void postDataToServer(JsonObject obj,int pos,int employeeID){
+
+    private void postDataToServer(JsonObject obj, int pos, int employeeID) {
         // Using the Retrofit
         ApiInterface apiService =
                 ApiClient.getClient().create(ApiInterface.class);
-        Call<JsonObject> call = apiService.postFingerPrint (obj);
-        showProgress("Fingerprints Synchronization starts.. ",true);
+        Call<JsonObject> call = apiService.postFingerPrint(obj);
+        showProgress("Fingerprints Synchronization starts.. ", true);
         call.enqueue(new Callback<JsonObject>() {
 
             @Override
@@ -207,75 +206,72 @@ private String Password;
                 JSONObject jsonObject = null;
                 try {
                     jsonObject = new JSONObject(new Gson().toJson(response.body()));
-                    if(jsonObject.has("Accepted")){ //REQUEST SUCCESSFUL
+                    if (jsonObject.has("Accepted")) { //REQUEST SUCCESSFUL
                         Log.e("response-success", jsonObject.getString("Accepted"));
                         //REMOVE THIS
                         db.deleteTemporaryFingerPrints(employeeID);
-                    }else{
-                        Log.e("response-failed","SALE DETAILS DON'T SAVE");
+                    } else {
+                        Log.e("response-failed", "SALE DETAILS DON'T SAVE");
                         //showMessage(false,"SALE DETAILS DON'T SAVE");
                     }
 
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
-                if(pos==temporaryFingerPrints.size()){
+                if (pos == temporaryFingerPrints.size()) {
                     emptyFingerPrintsTable();
-                    showProgress("Fingerprints Synchronization complete.",false);
-                    showMessage(true,"Fingerprints Synchronization complete");
+                    showProgress("Fingerprints Synchronization complete.", false);
+                    showMessage(true, "Fingerprints Synchronization complete");
+                    nbFp.setText("");
                 }
 
             }
 
             @Override
             public void onFailure(Call<JsonObject> call, Throwable t) {
-                showMessage(false,"PLEASE VERIFY YOUR CREDENTIALS OR  NETWORK CONNECTION...");
+                showMessage(false, "PLEASE VERIFY YOUR CREDENTIALS OR  NETWORK CONNECTION...");
                 Log.e("response-failure", call.toString());
-                showProgress("Fingerprints Synchronization complete.",false);
+                showProgress("Fingerprints Synchronization complete.", false);
                 nbFp.setText("Verify your internet connection and retry....");
             }
 
         });
     }
+
     //DIALOG SYNCHRONIZE THE SALES FROM SERVER
     private void synchronizeFingerPrints() {
         AlertDialog.Builder builder;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
-        {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             builder = new AlertDialog.Builder(SyncFingerPrintToServer.this, android.R.style.Theme_Material_Dialog_Alert);
-        } else
-        {
+        } else {
             builder = new AlertDialog.Builder(SyncFingerPrintToServer.this);
         }
         builder.setCancelable(false);
         builder.setTitle("Sync Fingerprints")
                 .setMessage("Do you really want to SYNC THOSE FINGERPRINTS")
-                .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener()
-                {
-                    public void onClick(DialogInterface dialog, int which)
-                    {
+                .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
                         saveFingerPrintsToServer(temporaryFingerPrints);
                     }
                 })
-                .setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener()
-                {
-                    public void onClick(DialogInterface dialog, int which)
-                    {
+                .setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
                         // do nothing
                     }
                 })
                 .show();
     }
+
     private void emptyFingerPrintsTable() {
         //GET NUMBER OF FINGERPRINTS TO SYNC
         nbFingerPrintsToSync = db.getFingerCount();
         Log.d("SERVER", "FINGERPRINTS TO SEND COUNT : " + nbFingerPrintsToSync);
-        if(nbFingerPrintsToSync ==0) {
+        if (nbFingerPrintsToSync == 0) {
             //EMPTY THE SALES TABLE
             db.emptyTable("empreintes_tmp");
             btnSynchronizeFingerPrints.setText("No Fingerprint to sync");
             btnSynchronizeFingerPrints.setEnabled(false);
-            showMessage(true,"Synchronization complete...");
+            showMessage(true, "Synchronization complete...");
         }
     }
 

@@ -6,6 +6,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -34,8 +35,8 @@ import asia.kanopi.fingerscan.Fingerprint;
 import asia.kanopi.fingerscan.Status;
 
 public class AddFingerPrintActivity extends AppCompatActivity {
-    private int selectedEmployeeID=0;
-    private ImageView leftFinger1,leftFinger2,rightFinger1,rightFinger2;
+    private int selectedEmployeeID = 0;
+    private ImageView leftFinger1, leftFinger2, rightFinger1, rightFinger2;
     private TextView tvStatus;
     private TextView tvError;
     private Button buttonAddFingerprint;
@@ -44,21 +45,22 @@ public class AddFingerPrintActivity extends AppCompatActivity {
     private Helper helper;
     private ProgressDialog dialog;
     private String fingerSelected;
-    private byte[] LF1,LF2,RF1,RF2;
+    private byte[] LF1, LF2, RF1, RF2;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_add_finger_print);
         Intent dataFromActivity = getIntent();
         Employee employee = (Employee) dataFromActivity.getSerializableExtra("Employe");
-        selectedEmployeeID=employee.getEmployee_id();
-        String employeeInfo=employee.getEmployee_prenom()+" "+employee.getEmployee_nom()+" | "+selectedEmployeeID;
+        selectedEmployeeID = employee.getEmployee_id();
+        String employeeInfo = employee.getEmployee_prenom() + " " + employee.getEmployee_nom() + " | " + selectedEmployeeID;
         getSupportActionBar().setTitle(employeeInfo);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         //HELPER
         helper = new Helper();
         //DATABASE
-        db=new DatabaseHelper(this);
+        db = new DatabaseHelper(this);
         //FINGERPRINT INSTANCE FROM KANOPI
         fingerprint = new Fingerprint();
         //VIEWS
@@ -70,7 +72,6 @@ public class AddFingerPrintActivity extends AppCompatActivity {
         leftFinger2 = (ImageView) findViewById(R.id.finger_left2);
         rightFinger1 = (ImageView) findViewById(R.id.finger_right1);
         rightFinger2 = (ImageView) findViewById(R.id.finger_right2);
-
 
 
         leftFinger1.setOnClickListener(new View.OnClickListener() {
@@ -98,21 +99,20 @@ public class AddFingerPrintActivity extends AppCompatActivity {
             }
         });
 
-       //ADD FINGERPRINTS IN LOCAL DB
+        //ADD FINGERPRINTS IN LOCAL DB
         buttonAddFingerprint.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                buttonAddFingerprint.setVisibility(View.GONE);
-                saveFingerPrints();
+                new SaveFingerPrintsInBackground().execute();
             }
         });
 
     }
 
     private void saveFingerPrintTo(String server) {
-        if(server=="SERVER"){
+        if (server == "SERVER") {
             //saveFingerprintToServer();
-        }else{
+        } else {
             saveFingerprintLocalDB();
         }
     }
@@ -123,7 +123,7 @@ public class AddFingerPrintActivity extends AppCompatActivity {
             case android.R.id.home:
                 Intent intent = new Intent();
                 intent.putExtra("status", -1);
-                setResult(RESULT_CANCELED,intent);
+                setResult(RESULT_CANCELED, intent);
                 fingerprint.turnOffReader();
                 //setContentView(R.layout.cart_content);
                 finish();
@@ -140,7 +140,7 @@ public class AddFingerPrintActivity extends AppCompatActivity {
     private void startScan(String finger) {
         fingerSelected = finger;
         fingerprint.scan(this, printHandler, updateHandler);
-        Toast.makeText(getApplicationContext(),"FINGER : "+finger,Toast.LENGTH_LONG).show();
+        Toast.makeText(getApplicationContext(), "FINGER : " + finger, Toast.LENGTH_LONG).show();
     }
 
     @Override
@@ -203,7 +203,7 @@ public class AddFingerPrintActivity extends AppCompatActivity {
                 image = msg.getData().getByteArray("img");
                 intent.putExtra("img", image);
                 //CONVERT IMAGE TO BITMAP
-               Bitmap bm = BitmapFactory.decodeByteArray(image, 0, image.length);
+                Bitmap bm = BitmapFactory.decodeByteArray(image, 0, image.length);
                 switch (fingerSelected) {
                     case "LF1":
                         leftFinger1.setImageBitmap(bm);
@@ -211,15 +211,15 @@ public class AddFingerPrintActivity extends AppCompatActivity {
                         break;
                     case "LF2":
                         leftFinger2.setImageBitmap(bm);
-                        LF2=image;
+                        LF2 = image;
                         break;
                     case "RF1":
                         rightFinger1.setImageBitmap(bm);
-                        RF1=image;
+                        RF1 = image;
                         break;
                     case "RF2":
                         rightFinger2.setImageBitmap(bm);
-                        RF2=image;
+                        RF2 = image;
                         break;
                 }
             } else {
@@ -230,31 +230,28 @@ public class AddFingerPrintActivity extends AppCompatActivity {
 
         }
     };
-    private void showProgress(String msg,boolean show) {
-        if (dialog == null)
-        {
+
+    private void showProgress(String msg, boolean show) {
+        if (dialog == null) {
             dialog = new ProgressDialog(AddFingerPrintActivity.this);
             dialog.setMessage(msg);
             dialog.setCancelable(false);
         }
 
-        if (show)
-        {
+        if (show) {
             dialog.show();
-        } else
-        {
+        } else {
             dialog.dismiss();
         }
     }
+
     //Shows a message by using Snackbar
     private void showMessage(Boolean isSuccessful, String message) {
         Snackbar snackbar = Snackbar.make(findViewById(android.R.id.content), message, Snackbar.LENGTH_LONG);
 
-        if (isSuccessful)
-        {
+        if (isSuccessful) {
             snackbar.getView().setBackgroundColor(ContextCompat.getColor(AddFingerPrintActivity.this, R.color.colorAccent));
-        } else
-        {
+        } else {
             snackbar.getView().setBackgroundColor(ContextCompat.getColor(AddFingerPrintActivity.this, R.color.design_default_color_error));
         }
 
@@ -262,15 +259,14 @@ public class AddFingerPrintActivity extends AppCompatActivity {
     }
 
     //SAVE FINGERPRINT TO LOCAL DB
-    private void saveFingerprintLocalDB(){
-        showProgress("Saving FingerPrints....",true);
+    private Boolean saveFingerprintLocalDB() {
+        Boolean done = false;
         int qty = 0;
         byte[] serializeTemplate;
-        String template,fingerImage;
+        String template, fingerImage;
         List<FingerPrintTemp> temporaryList = new ArrayList<>();
 
-        if(LF1!= null && LF2!= null && RF1!= null && RF2!= null && selectedEmployeeID!=0){
-            showProgress("Saving FingerPrints....",true);
+        if (LF1 != null && LF2 != null && RF1 != null && RF2 != null && selectedEmployeeID != 0) {
             //ADD THE FINGERPRINTS TO THE LIST
             //================== LF1 ============================
             FingerPrintTemp fingerPrintTempF1 = new FingerPrintTemp();
@@ -326,50 +322,61 @@ public class AddFingerPrintActivity extends AppCompatActivity {
             temporaryList.add(fingerPrintTempF4);
 
             //SAVE THE INFO TO DB
-            if(db.addTemporaryFingerPrint(temporaryList)){
-                showProgress("Saving FingerPrints....",false);
-                Toast.makeText(getApplicationContext(), "Fingerprints added successfully.... ", Toast.LENGTH_LONG).show();
+            if (db.addTemporaryFingerPrint(temporaryList)) {
+                done = true;
+                showMessage(true,"DONE");
                 finish();
-            }else{
-                showProgress("Saving FingerPrints....",false);
-                Toast.makeText(getApplicationContext(), "Failed to save Fingerprints...", Toast.LENGTH_LONG).show();
-                buttonAddFingerprint.setVisibility(View.VISIBLE);
             }
-
-        }else{
-            showProgress("Saving FingerPrints....",false);
-            Toast.makeText(getApplicationContext(),"Please provide all the Fingerprints...",Toast.LENGTH_LONG).show();
-            buttonAddFingerprint.setVisibility(View.VISIBLE);
+        } else {
+           showMessage(false,"Please provide all the Fingerprints");
         }
+
+        return done;
     }
+
     //DIALOG SAVE FINGERPRINTS
     private void saveFingerPrints() {
         AlertDialog.Builder builder;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
-        {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             builder = new AlertDialog.Builder(AddFingerPrintActivity.this, android.R.style.Theme_Material_Dialog_Alert);
-        } else
-        {
+        } else {
             builder = new AlertDialog.Builder(AddFingerPrintActivity.this);
         }
         builder.setCancelable(false);
         builder.setTitle("Add Fingerprints")
                 .setMessage("Do you really want to SAVE THOSE FINGERPRINTS")
-                .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener()
-                {
-                    public void onClick(DialogInterface dialog, int which)
-                    {
-                        showProgress("Saving FingerPrints....",true);
+                .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
                         saveFingerPrintTo("LOCAL");
                     }
                 })
-                .setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener()
-                {
-                    public void onClick(DialogInterface dialog, int which)
-                    {
+                .setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
                         buttonAddFingerprint.setVisibility(View.VISIBLE);
                     }
                 })
                 .show();
     }
+    //SAVE FINGERPRINTS IN RHE BACKGROUND
+    public class SaveFingerPrintsInBackground extends AsyncTask<Void, Void,Boolean> {
+
+        @Override
+        protected Boolean doInBackground(Void... voids) {
+            return saveFingerprintLocalDB();
+        }
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            showProgress("Saving FingerPrints....", true);
+
+        }
+
+        @Override
+        protected void onPostExecute(Boolean done) {
+            super.onPostExecute(done);
+            showProgress("Saving FingerPrints....", false);
+        }
+    }
+
 }

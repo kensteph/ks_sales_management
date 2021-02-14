@@ -47,10 +47,11 @@ public class EmployeeListActivity extends AppCompatActivity {
     RecyclerView recyclerView;
     EditText editTextSearch;
     EmployeeAdapter adapter;
-    DatabaseHelper db ;
+    DatabaseHelper db;
     private Helper helper;
     private ProgressDialog dialog;
     private Button btnSynchronizeSales;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -65,10 +66,10 @@ public class EmployeeListActivity extends AppCompatActivity {
         editTextSearch = (EditText) findViewById(R.id.editTextSearch);
         recyclerView.setHasFixedSize(true);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        adapter = new EmployeeAdapter(this,employeesList);
+        adapter = new EmployeeAdapter(this, employeesList);
         recyclerView.setAdapter(adapter);
 
-        db=new DatabaseHelper(this);
+        db = new DatabaseHelper(this);
         //LOAD EMPLOYEES
         //FROM SERVER
         //getEmployees();
@@ -124,7 +125,7 @@ public class EmployeeListActivity extends AppCompatActivity {
         List<Employee> filteredNames = new ArrayList<>();
         //looping through existing elements
         for (Employee employee : employeesList) {
-            String employeeInfo = employee.getEmployee_prenom()+" "+employee.getEmployee_nom()+" "+employee.getEmployee_code()+" "+employee.getEmployee_id();
+            String employeeInfo = employee.getEmployee_prenom() + " " + employee.getEmployee_nom() + " " + employee.getEmployee_code() + " " + employee.getEmployee_id();
             //if the existing elements contains the search input
             if (employeeInfo.toLowerCase().contains(text.toLowerCase())) {
                 //adding the element to filtered list
@@ -132,35 +133,32 @@ public class EmployeeListActivity extends AppCompatActivity {
             }
         }
 
-        adapter = new EmployeeAdapter(this,filteredNames);
+        adapter = new EmployeeAdapter(this, filteredNames);
         recyclerView.setAdapter(adapter);
         adapter.notifyDataSetChanged();
     }
-    private void showProgress(String msg,boolean show) {
-        if (dialog == null)
-        {
+
+    private void showProgress(String msg, boolean show) {
+        if (dialog == null) {
             dialog = new ProgressDialog(EmployeeListActivity.this);
             dialog.setMessage(msg);
             dialog.setCancelable(false);
         }
 
-        if (show)
-        {
+        if (show) {
             dialog.show();
-        } else
-        {
+        } else {
             dialog.dismiss();
         }
     }
+
     //Shows a message by using Snackbar
     private void showMessage(Boolean isSuccessful, String message) {
         Snackbar snackbar = Snackbar.make(findViewById(android.R.id.content), message, Snackbar.LENGTH_LONG);
 
-        if (isSuccessful)
-        {
+        if (isSuccessful) {
             snackbar.getView().setBackgroundColor(ContextCompat.getColor(EmployeeListActivity.this, R.color.colorAccent));
-        } else
-        {
+        } else {
             snackbar.getView().setBackgroundColor(ContextCompat.getColor(EmployeeListActivity.this, R.color.design_default_color_error));
         }
 
@@ -168,8 +166,8 @@ public class EmployeeListActivity extends AppCompatActivity {
     }
 
     //LOAD EMPLOYEE WITHOUT FINGERPRINTS FROM SERVER
-    private void getEmployees(){
-        showProgress("Récupération des données du serveur....",false);
+    private void getEmployees() {
+        showProgress("Récupération des données du serveur....", false);
         ApiInterface apiService =
                 ApiClient.getClient().create(ApiInterface.class);
         Call<JsonObject> call = apiService.getAllEmployees("WFP");
@@ -184,13 +182,13 @@ public class EmployeeListActivity extends AppCompatActivity {
                     JSONArray array = jsonObject.getJSONArray("Employees");
                     for (int i = 0; i < array.length(); i++) {
                         JSONObject data = array.getJSONObject(i);
-                        Employee employee = new Employee(data.getInt("id"),data.getInt("entreprise_id"),data.getString("employe_code"),data.getString("employe_prenom"),data.getString("employe_nom"));
+                        Employee employee = new Employee(data.getInt("id"), data.getInt("entreprise_id"), data.getString("employe_code"), data.getString("employe_prenom"), data.getString("employe_nom"));
                         //db.saveEmployees(employee);
                         employeesList.add(employee);
-                        Log.d("SERVER 1",data.getString("employe_prenom"));
+                        Log.d("SERVER 1", data.getString("employe_prenom"));
                     }
                     adapter.notifyDataSetChanged();
-                    showProgress("",false);
+                    showProgress("", false);
                     showMessage(true, "Récupération terminée !!!");
                 } catch (JSONException e) {
                     e.printStackTrace();
@@ -199,13 +197,14 @@ public class EmployeeListActivity extends AppCompatActivity {
 
             @Override
             public void onFailure(Call<JsonObject> call, Throwable t) {
-                showProgress("",false);
+                showProgress("", false);
                 showMessage(false, t.getMessage());
                 //Toast.makeText(getApplicationContext(), "Unable to fetch json: " + t.getMessage(), Toast.LENGTH_LONG).show();
-                Log.d("SERVER",t.getMessage());
+                Log.d("SERVER", t.getMessage());
             }
         });
     }
+
     //LOAD EMPLOYEES FROM DB
     public class LoadEmployeesFromDB extends AsyncTask<Void, Void, List<Employee>> {
 
@@ -224,15 +223,15 @@ public class EmployeeListActivity extends AppCompatActivity {
         protected void onPostExecute(List<Employee> employees) {
             super.onPostExecute(employees);
             JSONArray array = new JSONArray();
-            for(Employee employee : employees){
+            for (Employee employee : employees) {
                 employeesList.add(employee);
                 String json = helper.toJSON(employee);
                 //Log.d("SALES JSON",""+json);
             }
             String json = helper.toJSON(employeesList);
-            Log.d("SALES JSON ARRAY",""+json);
+            Log.d("SALES JSON ARRAY", "" + json);
             adapter.notifyDataSetChanged();
-            Log.d("EMPLOYEE DATA","NB : "+employeesList.size());
+            Log.d("EMPLOYEE DATA", "NB : " + employeesList.size());
         }
     }
 

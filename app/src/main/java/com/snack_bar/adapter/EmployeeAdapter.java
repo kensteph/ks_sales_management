@@ -7,7 +7,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -37,14 +36,14 @@ public class EmployeeAdapter extends RecyclerView.Adapter<EmployeeAdapter.ViewHo
     public void onBindViewHolder(ViewHolder holder, int position) {
         Employee employee = employees.get(position);
         employeeInfo = employee.getEmployee_prenom()+" "+employee.getEmployee_nom()+" | "+employee.getEmployee_id();
-        if(employeeInfo.length()>25){
-            employeeInfo = employeeInfo.substring(0,25)+"...";
-        }
+//        if(employeeInfo.length()>25){
+//            employeeInfo = employeeInfo.substring(0,25)+"...";
+//        }
         holder.textViewName.setText(employeeInfo.toUpperCase());
         holder.addFingerPrint.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Toast.makeText(view.getContext(),"FINGERPRINTS FOR "+employeeInfo,Toast.LENGTH_LONG).show();
+                //Toast.makeText(view.getContext(),"FINGERPRINTS FOR "+employeeInfo,Toast.LENGTH_LONG).show();
                 Intent intent =new Intent(context, AddFingerPrintActivity.class);
                 intent.putExtra("Employe", employee);
                 context.startActivity(intent);
