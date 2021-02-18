@@ -1,4 +1,4 @@
- package com.snack_bar;
+ package com.snack_bar.activities;
 
  import android.os.Bundle;
 import android.view.View;
@@ -11,6 +11,7 @@ import com.budiyev.android.codescanner.CodeScanner;
 import com.budiyev.android.codescanner.CodeScannerView;
 import com.budiyev.android.codescanner.DecodeCallback;
 import com.google.zxing.Result;
+ import com.snack_bar.R;
 
  public class ScannerActivity extends AppCompatActivity{
      private CodeScanner mCodeScanner;

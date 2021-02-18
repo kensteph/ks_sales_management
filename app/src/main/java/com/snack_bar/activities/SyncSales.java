@@ -1,4 +1,4 @@
-package com.snack_bar;
+package com.snack_bar.activities;
 
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
@@ -11,6 +11,7 @@ import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
@@ -20,11 +21,13 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
-import com.snack_bar.adapter.SaleListAdapter;
+import com.snack_bar.R;
+import com.snack_bar.adapter.SalesReportAdapter;
 import com.snack_bar.database.DatabaseHelper;
 import com.snack_bar.model.Item;
 import com.snack_bar.model.Order;
 import com.snack_bar.model.SaleItemListModel;
+import com.snack_bar.model.SalesReportModel;
 import com.snack_bar.network.ApiClient;
 import com.snack_bar.network.ApiInterface;
 import com.snack_bar.util.Helper;
@@ -39,13 +42,15 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class SalesListActivity extends AppCompatActivity {
+public class SyncSales extends AppCompatActivity {
     RecyclerView recyclerView;
     List<SaleItemListModel> salesList;
-    SaleListAdapter saleListAdapter ;
+    List<SalesReportModel> SalesReport;
+    SalesReportAdapter saleListAdapter ;
     DatabaseHelper databaseHelper;
     private ProgressDialog dialog;
-    public static   Button btnSynchronizeSales;
+    public static Button btnSynchronizeSales;
+    private TextView tv_summary_report;
     private Helper helper;
     //SHARED PREFERENCES
     private static final String SHARED_PREF_NAME = "MY_SHARED_PREFERENCES";
@@ -58,14 +63,17 @@ public class SalesListActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_sales_list);
+        setContentView(R.layout.activity_sync_sales);
         recyclerView = findViewById(R.id.rvSalesList);
         btnSynchronizeSales = findViewById(R.id.btnSynchronizeSales);
+        tv_summary_report = (TextView) findViewById(R.id.tv_summary_report);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         databaseHelper=new DatabaseHelper(this);
         helper = new Helper();
+        helper.getCurrentDate();
         salesList = new ArrayList<>();
-        saleListAdapter = new SaleListAdapter(salesList,getBaseContext());
+        SalesReport = new ArrayList<>();
+        saleListAdapter = new SalesReportAdapter(SalesReport,getBaseContext());
         recyclerView.setAdapter(saleListAdapter);
         recyclerView.setHasFixedSize(true);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
@@ -79,7 +87,6 @@ public class SalesListActivity extends AppCompatActivity {
         initData();
         //GET NUMBER OF LINES IN SALES_DETAILS
         numberOfSalesDetails = databaseHelper.getSalesDetailsCount();
-
         btnSynchronizeSales.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -100,6 +107,7 @@ public class SalesListActivity extends AppCompatActivity {
 
     private void initData() {
         new LoadSalesFromDb().execute();
+        new LoadSalesReportFromDb().execute();
     }
 
     public  class LoadSalesFromDb extends AsyncTask<Void, Void, List<SaleItemListModel>> {
@@ -108,6 +116,7 @@ public class SalesListActivity extends AppCompatActivity {
         protected List<SaleItemListModel> doInBackground(Void... voids) {
             List<SaleItemListModel> ls = null;
             try{
+                //GET ALL SALES
                 ls = databaseHelper.getAllSales();
             }catch (IllegalStateException ex){
                 Log.d("SALES-LIST", "doInBackground: "+ex);
@@ -127,15 +136,54 @@ public class SalesListActivity extends AppCompatActivity {
             for(SaleItemListModel slm : saleItemListModels){
                 salesList.add(slm);
             }
-            saleListAdapter.notifyDataSetChanged();
+            //saleListAdapter.notifyDataSetChanged();
             int nbSales =salesList.size();
             if(nbSales>0){
-                btnSynchronizeSales.setText(nbSales+" sales to sync");
+                btnSynchronizeSales.setText("Tap to sync "+nbSales+" sales");
             }else{
-                btnSynchronizeSales.setText("No sale to sync");
                 btnSynchronizeSales.setEnabled(false);
             }
-            emptySalesTable(false);
+
+        }
+    }
+
+    public  class LoadSalesReportFromDb extends AsyncTask<Void, Void, List<SalesReportModel>> {
+
+        @Override
+        protected List<SalesReportModel> doInBackground(Void... voids) {
+            List<SalesReportModel> lsr = null;
+            try{
+                //GET ALL SALES
+                lsr = databaseHelper.getSalesProductsReport();
+            }catch (IllegalStateException ex){
+                Log.d("SALES-LIST", "doInBackground: "+ex);
+            }
+            return lsr;
+        }
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+        }
+
+        @Override
+        protected void onPostExecute(List<SalesReportModel> salesReport) {
+            super.onPostExecute(salesReport);
+            for(SalesReportModel slr : salesReport){
+                SalesReport.add(slr);
+            }
+            saleListAdapter.notifyDataSetChanged();
+            //GET SUMMARY INFO
+            Double salesAmount = databaseHelper.getSalesTotalAmount();
+            int nbProducts = SalesReport.size();
+            if(nbProducts>0){
+                btnSynchronizeSales.setText("Tap to sync sales");
+            }else{
+                btnSynchronizeSales.setText("NO SALES TO SYNC");
+            }
+            String summary="Sales (Products : "+nbProducts+"     Amount : "+salesAmount+")";
+            tv_summary_report.setText(summary);
+            Log.d("REPORT", "SUMMARY REPORT: "+summary);
 
         }
     }
@@ -143,7 +191,7 @@ public class SalesListActivity extends AppCompatActivity {
     private void showProgress(String msg,boolean show) {
         if (dialog == null)
         {
-            dialog = new ProgressDialog(SalesListActivity.this);
+            dialog = new ProgressDialog(SyncSales.this);
             dialog.setMessage(msg);
             dialog.setCancelable(false);
         }
@@ -162,10 +210,10 @@ public class SalesListActivity extends AppCompatActivity {
 
         if (isSuccessful)
         {
-            snackbar.getView().setBackgroundColor(ContextCompat.getColor(SalesListActivity.this, R.color.colorAccent));
+            snackbar.getView().setBackgroundColor(ContextCompat.getColor(SyncSales.this, R.color.colorAccent));
         } else
         {
-            snackbar.getView().setBackgroundColor(ContextCompat.getColor(SalesListActivity.this, R.color.design_default_color_error));
+            snackbar.getView().setBackgroundColor(ContextCompat.getColor(SyncSales.this, R.color.design_default_color_error));
         }
 
         snackbar.show();
@@ -180,14 +228,15 @@ public class SalesListActivity extends AppCompatActivity {
             int position =1;
             for (SaleItemListModel sale : salesList)
             {
-                Log.d("SERVER", "SALES ID : " + sale.getSaleId());
+                Log.d("SALES SYNC", "SALES ID : " + sale.getSaleId());
                 //SALE DETAILS
                 List<Order> saleDetails= new ArrayList<>();
                 saleDetails=sale.getItem();
+
                 int nbLines = saleDetails.size();
                 int posDetails = 1;
                 for (Order sd : saleDetails) {
-                    prepareJSON(sale.getEmployee(),sale.getSaleId(),sd,sale.getSaleDate(),position,nbLines,posDetails);
+                    prepareJSON(sale.getEmployee(),sale.getSaleId(),sd,sale.getSaleDate(),sale.getSaleType(),position,nbLines,posDetails);
                     posDetails++;
                 }
                 Log.d("SERVER", "SALES PROCESSING ID  : " + sale.getSaleId());
@@ -200,7 +249,7 @@ public class SalesListActivity extends AppCompatActivity {
         }
 
     }
-    private void prepareJSON(int employeeID,int saleID,Order order,String date,int position,int nbLines,int posDetails){
+    private void prepareJSON(int employeeID,int saleID,Order order,String date,int saleType,int position,int nbLines,int posDetails){
         JsonObject login = new JsonObject();
         JsonObject obj = new JsonObject();
         login.addProperty ("Email",Email);
@@ -213,9 +262,15 @@ public class SalesListActivity extends AppCompatActivity {
         obj.addProperty("Quantite",order.quantity);
         obj.addProperty("Prix", item.unitPrice);
         obj.addProperty("Date", date);
+        String typeVente = "False";
+        if(saleType == 1){
+            typeVente = "True";
+        }
+        obj.addProperty("Typevente", typeVente);
         obj.add("Login",login);
         String data = obj.toString();
         Log.d("SERVER", "JSON : " + data);
+        Log.d("SALES SYNC", "SALES DETAILS : " +data);
         postDataToServer(obj,saleID,productId,position,nbLines,posDetails);
 
     }
@@ -228,37 +283,42 @@ public class SalesListActivity extends AppCompatActivity {
 
             @Override
             public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
-                //Log.e("response-success", response.body().toString());
+                // Log.e("SYNC SALES","SERVER RESPONSE : "+ response.body().toString());
                 JSONObject jsonObject = null;
                 try {
                     jsonObject = new JSONObject(new Gson().toJson(response.body()));
-                   if(jsonObject.has("Accepted")){ //REQUEST SUCCESSFUL
-                       Log.d("SYNC SALES", "POS DETAIL/NB LINES: "+posDetails+"/"+nbLines);
-                       Log.e("response-success", jsonObject.getString("Accepted"));
-                       //REMOVE THIS DETAILS FROM SALES DETAILS
+                    if(jsonObject.has("Accepted")){ //REQUEST SUCCESSFUL
+                        Log.d("SYNC SALES", "POS DETAIL/NB LINES: "+posDetails+"/"+nbLines);
+                        Log.e("response-success", jsonObject.getString("Accepted"));
+                        //REMOVE THIS DETAILS FROM SALES DETAILS
                         databaseHelper.deleteSaleDetails(saleID,productId);
-                       //DELETE THIS SALE
-                       if(posDetails == nbLines){ //If the last line
-                           databaseHelper.deleteSale(saleID);
-                       }
-                      // emptySalesTable(true);
-                   }else{
-                       Log.e("response-failed","SALE DETAILS DON'T SAVE");
-                       //showMessage(false,"SALE DETAILS DON'T SAVE");
-                   }
+                        //DELETE THIS SALE
+                        if(posDetails == nbLines){ //If the last line
+                            databaseHelper.deleteSale(saleID);
+                        }
+                        // emptySalesTable(true);
+                    }else{
+                        Log.e("response-failed","SALE DETAILS DON'T SAVE");
+                        //showMessage(false,"SALE DETAILS DON'T SAVE");
+                    }
+                    if(position == salesList.size()){
+                        showProgress("Sales Synchronization start....",false);
+                        //EMPTY THE SALES TABLE
+                        emptySalesTable(true);
+                        Log.e("DONE","SALE SYNC DONE....");
+                        SalesReport.clear();
+                        saleListAdapter.notifyDataSetChanged();
+                        btnSynchronizeSales.setText("No sale to sync");
+                        btnSynchronizeSales.setEnabled(false);
+                        showMessage(true,"Synchronization complete...");
+                    }
 
                 } catch (JSONException e) {
                     e.printStackTrace();
-                }
-                if(position == salesList.size()){
-                    showProgress("Sales Synchronization start....",false);
-                    //EMPTY THE SALES TABLE
-                    emptySalesTable(true);
-                    Log.e("DONE","SALE SYNC DONE....");
-                    salesList.clear();
                     saleListAdapter.notifyDataSetChanged();
-                    btnSynchronizeSales.setText("No sale to sync");
-                    btnSynchronizeSales.setEnabled(false);
+                    Log.e("response-failed","SALE DETAILS DON'T SAVE"+e.getMessage());
+                    showProgress("Sales Synchronization start....",false);
+                    showMessage(false,"SALE ID "+saleID+" CANNOT BE SYNCED");
                 }
 
             }
@@ -279,9 +339,11 @@ public class SalesListActivity extends AppCompatActivity {
         if(numberOfSalesDetails ==0) {
             //EMPTY THE SALES TABLE
             databaseHelper.emptyTable("sales");
-            salesList.clear();
+            SalesReport.clear();
+            recyclerView.setAdapter(saleListAdapter);
             saleListAdapter.notifyDataSetChanged();
             btnSynchronizeSales.setText("No sale to sync");
+            tv_summary_report.setText("");
             if(showMessage){
                 showMessage(true,"Synchronization complete...");
             }
@@ -294,10 +356,10 @@ public class SalesListActivity extends AppCompatActivity {
         AlertDialog.Builder builder;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
         {
-            builder = new AlertDialog.Builder(SalesListActivity.this, android.R.style.Theme_Material_Dialog_Alert);
+            builder = new AlertDialog.Builder(SyncSales.this, android.R.style.Theme_Material_Dialog_Alert);
         } else
         {
-            builder = new AlertDialog.Builder(SalesListActivity.this);
+            builder = new AlertDialog.Builder(SyncSales.this);
         }
         builder.setCancelable(false);
         builder.setTitle("Sync Sales")

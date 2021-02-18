@@ -1,4 +1,4 @@
-package com.snack_bar;
+package com.snack_bar.activities;
 
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
@@ -19,6 +19,7 @@ import androidx.core.content.ContextCompat;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import com.snack_bar.R;
 import com.snack_bar.database.DatabaseHelper;
 import com.snack_bar.model.FingerPrintTemp;
 import com.snack_bar.network.ApiClient;

@@ -10,7 +10,7 @@ import android.widget.TextView;
 
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.snack_bar.AddFingerPrintActivity;
+import com.snack_bar.activities.AddFingerPrintActivity;
 import com.snack_bar.R;
 import com.snack_bar.model.Employee;
 
@@ -35,7 +35,7 @@ public class EmployeeAdapter extends RecyclerView.Adapter<EmployeeAdapter.ViewHo
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
         Employee employee = employees.get(position);
-        employeeInfo = employee.getEmployee_prenom()+" "+employee.getEmployee_nom()+" | "+employee.getEmployee_id();
+        employeeInfo = employee.getEmployee_code()+" | "+employee.getEmployee_prenom()+" "+employee.getEmployee_nom();
 //        if(employeeInfo.length()>25){
 //            employeeInfo = employeeInfo.substring(0,25)+"...";
 //        }

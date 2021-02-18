@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ProductsList"
+    tools:context=".activities.ProductsList"
     android:orientation="vertical">
     <TextView
         android:layout_marginTop="15dp"

@@ -20,8 +20,10 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Base64;
+import java.util.Date;
 import java.util.List;
 import java.util.Random;
 
@@ -211,6 +213,14 @@ private Context context;
 
             }
         });
+    }
+
+    public String getCurrentDate(){
+        Date date = new Date();
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        String res = formatter.format(date);
+        Log.e("DATE", "getCurrentDate: "+res);
+        return res;
     }
 
 }

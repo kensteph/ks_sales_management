@@ -1,4 +1,4 @@
-package com.snack_bar;
+package com.snack_bar.activities;
 
 import android.app.ProgressDialog;
 import android.content.Intent;
@@ -11,6 +11,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
@@ -22,6 +23,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import com.snack_bar.R;
 import com.snack_bar.adapter.EmployeeAdapter;
 import com.snack_bar.database.DatabaseHelper;
 import com.snack_bar.model.Employee;
@@ -44,6 +46,7 @@ import retrofit2.Response;
 public class EmployeeListActivity extends AppCompatActivity {
     private List<Employee> employeesList;
     private List<FingerPrint> listDbFingerPrints;
+    private TextView tv_nb_employees;
     RecyclerView recyclerView;
     EditText editTextSearch;
     EmployeeAdapter adapter;
@@ -64,6 +67,7 @@ public class EmployeeListActivity extends AppCompatActivity {
         listDbFingerPrints = new ArrayList<FingerPrint>();
         recyclerView = (RecyclerView) findViewById(R.id.recyclerView);
         editTextSearch = (EditText) findViewById(R.id.editTextSearch);
+        tv_nb_employees = (TextView) findViewById(R.id.tv_nb_employees);
         recyclerView.setHasFixedSize(true);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         adapter = new EmployeeAdapter(this, employeesList);
@@ -231,7 +235,9 @@ public class EmployeeListActivity extends AppCompatActivity {
             String json = helper.toJSON(employeesList);
             Log.d("SALES JSON ARRAY", "" + json);
             adapter.notifyDataSetChanged();
-            Log.d("EMPLOYEE DATA", "NB : " + employeesList.size());
+            int nbEmp = employeesList.size();
+            Log.d("EMPLOYEE DATA", "NB : " +nbEmp );
+            tv_nb_employees.setText(nbEmp+" Employees");
         }
     }
 

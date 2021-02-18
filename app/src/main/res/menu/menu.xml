@@ -4,19 +4,31 @@
     <item android:title="Sync Products"
     android:id="@+id/sync_products"
     android:icon="@drawable/ic_sync_24" />
+
 <item android:title="Sync Employees"
     android:id="@+id/sync_employees"
     android:icon="@drawable/ic_sync_24" />
 
-    <item android:title="Employees"
+    <item android:title="Fingerprints"
         android:id="@+id/list_employees"
+        android:icon="@drawable/ic_sync_24" />
+
+    <item android:title="Sync Fingerprints"
+        android:id="@+id/manage_finger"
+        android:icon="@drawable/ic_sync_24" />
+
+    <item android:title="Manual Sales"
+        android:id="@+id/manual_sales"
         android:icon="@drawable/ic_sync_24" />
     <item android:title="Sales"
         android:id="@+id/list_sales"
         android:icon="@drawable/ic_sync_24" />
-    <item android:title="Fingerprints"
-        android:id="@+id/manage_finger"
+    <item android:title="Sync Sales"
+        android:id="@+id/sync_sales"
         android:icon="@drawable/ic_sync_24" />
+
+
+
     <item android:title="Logout"
         android:id="@+id/LogOut"
         android:icon="@drawable/ic_sync_24" />

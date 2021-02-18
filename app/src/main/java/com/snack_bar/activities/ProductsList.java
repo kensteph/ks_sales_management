@@ -1,4 +1,4 @@
-package com.snack_bar;
+package com.snack_bar.activities;
 
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
@@ -21,6 +21,7 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.snackbar.Snackbar;
+import com.snack_bar.R;
 import com.snack_bar.adapter.OrderAdapter;
 import com.snack_bar.adapter.ProductListAdapter;
 import com.snack_bar.database.DatabaseHelper;
@@ -40,6 +41,7 @@ public class ProductsList extends AppCompatActivity implements ProductListAdapte
     private LinearLayout llBtnQuickSave;
     private TextView txtCount,totalCartDisplay;
     private Double totalCart;
+    private int SaleType;
     private RelativeLayout rlCart;
     private ProgressDialog dialog;
     private int employeeSelectedID=0;
@@ -58,6 +60,7 @@ public class ProductsList extends AppCompatActivity implements ProductListAdapte
         //GET THE INFO FROM THE ACTIVITY
         String EmployeeFullName = getIntent().getStringExtra("EmployeeFullName");
         employeeSelectedID = getIntent().getIntExtra("EmployeeId",0);
+        SaleType = getIntent().getIntExtra("SaleType",0);
         actionBar.setHomeButtonEnabled(true);
         actionBar.setDisplayHomeAsUpEnabled(true);
         actionBar.setTitle(EmployeeFullName);
@@ -269,7 +272,7 @@ public class ProductsList extends AppCompatActivity implements ProductListAdapte
         protected Boolean doInBackground(Void... params)
         {
             //employeeSelectedID=helper.getRandomId(100,4000);
-            boolean rep = db.saveSaleDetails(orderList,materialID,employeeSelectedID,employeeCashierID,totalCart);
+            boolean rep = db.saveSaleDetails(orderList,materialID,employeeSelectedID,employeeCashierID,totalCart,SaleType);
             return rep;
         }
 

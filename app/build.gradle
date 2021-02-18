@@ -61,5 +61,6 @@ dependencies {
     implementation 'androidx.drawerlayout:drawerlayout:1.0.0' //DrawerLayout
     implementation 'androidx.coordinatorlayout:coordinatorlayout:1.0.0'  //CoordinatorLayout
     implementation 'com.google.android.material:material:1.0.0'
+    compileOnly 'com.google.android.wearable:wearable:2.6.0'
 
 }

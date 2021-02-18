@@ -5,7 +5,7 @@
     android:layout_height="match_parent"
     android:padding="10dp"
     android:layout_gravity="center"
-    tools:context=".UploadImageToServer"
+    tools:context=".activities.UploadImageToServer"
     android:orientation="vertical"
     >
     <LinearLayout

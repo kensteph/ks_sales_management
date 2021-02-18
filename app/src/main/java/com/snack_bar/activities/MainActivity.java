@@ -1,4 +1,4 @@
-package com.snack_bar;
+package com.snack_bar.activities;
 
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
@@ -35,6 +35,7 @@ import com.google.android.material.snackbar.Snackbar;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.machinezoo.sourceafis.FingerprintTemplate;
+import com.snack_bar.R;
 import com.snack_bar.database.DatabaseHelper;
 import com.snack_bar.model.Employee;
 import com.snack_bar.model.EmployeeFingerTemplate;
@@ -58,7 +59,7 @@ import retrofit2.Response;
 
 public class MainActivity extends AppCompatActivity {
 
-    private TextView tvStatus,tvError;
+    private TextView tvStatus, tvError;
     private Fingerprint fingerprint;
     private Button buttonRetry;
     private byte[] fingerCaptured;
@@ -95,6 +96,8 @@ public class MainActivity extends AppCompatActivity {
         drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         navigationView = (NavigationView) findViewById(R.id.nav_view);
         frameLayout = (FrameLayout) findViewById(R.id.frame);
+
+
         toggle = new ActionBarDrawerToggle(this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.addDrawerListener(toggle);
         toggle.syncState();
@@ -102,7 +105,7 @@ public class MainActivity extends AppCompatActivity {
         //HELPER
         helper = new Helper();
         //DATABASE
-        db=new DatabaseHelper(this);
+        db = new DatabaseHelper(this);
         //FINGERPRINT INSTANCE FROM KANOPI
         fingerprint = new Fingerprint();
         //LIST OF FINGERPRINTS FROM DB
@@ -112,12 +115,12 @@ public class MainActivity extends AppCompatActivity {
 
         //GET INFO FROM SHARED PREFERENCES
         sp = getSharedPreferences(SHARED_PREF_NAME, MODE_PRIVATE);
-        Email = sp.getString("email","");
-        Password = sp.getString("password","");
+        Email = sp.getString("email", "");
+        Password = sp.getString("password", "");
         Boolean isLogin = sp.getBoolean("isLogin", false);
 
         //LAUNCH LOGIN ACTIVITY
-        if(!isLogin){
+        if (!isLogin) {
             Intent intent = new Intent(MainActivity.this, LoginActivity.class);
             startActivity(intent);
             finish();
@@ -126,25 +129,22 @@ public class MainActivity extends AppCompatActivity {
         tvStatus = (TextView) findViewById(R.id.tvStatus);
         tvError = (TextView) findViewById(R.id.tvError);
         buttonRetry = (Button) findViewById(R.id.btnRetry);
-        buttonRetry.setVisibility(View.GONE);
+
+        //buttonRetry.setVisibility(View.GONE);
         buttonRetry.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 startScan();
-                // FOR TEST 9A6060AF
-//                Intent intent = new Intent(MainActivity.this, ProductsList.class);
-//                intent.putExtra("EmployeeFullName","Luchano Joachim | 001-1990-877-774-299");
-//                intent.putExtra("EmployeeId",3);
-//                startActivity(intent);
             }
         });
+
         //LOAD ALL FINGERPRINTS FROM DB
         new LoadFingerPrintsFromDB().execute();
     }
 
     @Override
     public void onBackPressed() {
-        if(drawer.isDrawerOpen(GravityCompat.START)) {
+        if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
         } else {
             super.onBackPressed();
@@ -164,7 +164,7 @@ public class MainActivity extends AppCompatActivity {
             case android.R.id.home:
                 Intent intent = new Intent();
                 intent.putExtra("status", -1);
-                setResult(RESULT_CANCELED,intent);
+                setResult(RESULT_CANCELED, intent);
                 fingerprint.turnOffReader();
                 //setContentView(R.layout.cart_content);
                 finish();
@@ -178,8 +178,14 @@ public class MainActivity extends AppCompatActivity {
             case R.id.list_employees:
                 startActivity(new Intent(MainActivity.this, EmployeeListActivity.class));
                 return true;
+            case R.id.manual_sales:
+                startActivity(new Intent(MainActivity.this, ManualSales.class));
+                return true;
             case R.id.list_sales:
                 startActivity(new Intent(MainActivity.this, SalesListActivity.class));
+                return true;
+            case R.id.sync_sales:
+                startActivity(new Intent(MainActivity.this, SyncSales.class));
                 return true;
             case R.id.manage_finger:
                 startActivity(new Intent(MainActivity.this, SyncFingerPrintToServer.class));
@@ -212,7 +218,8 @@ public class MainActivity extends AppCompatActivity {
         fingerprint.turnOffReader();
         super.onStop();
     }
-//SCANNER
+
+    //SCANNER
     Handler updateHandler = new Handler(Looper.getMainLooper()) {
         @Override
         public void handleMessage(Message msg) {
@@ -221,31 +228,31 @@ public class MainActivity extends AppCompatActivity {
             switch (status) {
                 case Status.INITIALISED:
                     tvStatus.setText("Setting up reader");
-                    buttonRetry.setVisibility(View.GONE);
+                    //buttonRetry.setVisibility(View.GONE);
                     break;
                 case Status.SCANNER_POWERED_ON:
                     tvStatus.setText("Reader powered on");
-                    buttonRetry.setVisibility(View.GONE);
+                    //buttonRetry.setVisibility(View.GONE);
                     break;
                 case Status.READY_TO_SCAN:
                     tvStatus.setText("Ready to scan finger");
-                    buttonRetry.setVisibility(View.GONE);
+                    // buttonRetry.setVisibility(View.GONE);
                     break;
                 case Status.FINGER_DETECTED:
                     tvStatus.setText("Finger detected");
-                    buttonRetry.setVisibility(View.GONE);
+                    //buttonRetry.setVisibility(View.GONE);
                     break;
                 case Status.RECEIVING_IMAGE:
                     tvStatus.setText("Receiving image");
-                    buttonRetry.setVisibility(View.GONE);
+                    //buttonRetry.setVisibility(View.GONE);
                     break;
                 case Status.FINGER_LIFTED:
                     tvStatus.setText("Finger has been lifted off reader");
-                    buttonRetry.setVisibility(View.GONE);
+                    //buttonRetry.setVisibility(View.GONE);
                     break;
                 case Status.SCANNER_POWERED_OFF:
                     tvStatus.setText("Reader is off");
-                    buttonRetry.setVisibility(View.VISIBLE);
+                    //buttonRetry.setVisibility(View.VISIBLE);
                     break;
                 case Status.SUCCESS:
                     tvStatus.setText("Fingerprint successfully captured");
@@ -253,11 +260,11 @@ public class MainActivity extends AppCompatActivity {
                 case Status.ERROR:
                     tvStatus.setText("Error");
                     buttonRetry.setVisibility(View.VISIBLE);
-                    tvError.setTextColor(Color.rgb(245,0,0));
+                    tvError.setTextColor(Color.rgb(245, 0, 0));
                     tvError.setText(msg.getData().getString("errorMessage"));
                     break;
                 default:
-                    buttonRetry.setVisibility(View.GONE);
+                    //buttonRetry.setVisibility(View.GONE);
                     tvStatus.setText(String.valueOf(status));
                     tvError.setText(msg.getData().getString("errorMessage"));
                     break;
@@ -277,20 +284,21 @@ public class MainActivity extends AppCompatActivity {
                 image = msg.getData().getByteArray("img");
                 //String str_img = msg.getData().getString("img");
 
-               // intent.putExtra("img", image);
+                // intent.putExtra("img", image);
                 fingerCaptured = image;
-                int matchId =  verifyFingerPrints();
-                if(matchId != 0){
+                int matchId = verifyFingerPrints();
+                if (matchId != 0) {
                     buttonRetry.setVisibility(View.GONE);
                     Employee match = db.getEmployeeInfo(matchId);
-                    Log.d("MATCH EMP",match.toString());
+                    Log.d("MATCH EMP", match.toString());
                     //Toast.makeText(getApplicationContext(),"Vous etes "+match.getEmployeeId(),Toast.LENGTH_LONG).show();
                     // Launch new intent instead of loading fragment
-                    intent.putExtra("EmployeeFullName",match.getFull_name()+" | "+match.getEmployee_id());
-                    intent.putExtra("EmployeeId",match.getEmployee_id());
+                    intent.putExtra("EmployeeFullName", match.getEmployee_code() + " | " + match.getFull_name());
+                    intent.putExtra("EmployeeId", match.getEmployee_id());
+                    intent.putExtra("SaleType",0);
                     startActivity(intent);
-                }else{
-                    Toast.makeText(getApplicationContext(),"Aucune correspondance...",Toast.LENGTH_LONG).show();
+                } else {
+                    Toast.makeText(getApplicationContext(), "Aucune correspondance...", Toast.LENGTH_LONG).show();
                     buttonRetry.setVisibility(View.VISIBLE);
                 }
             } else {
@@ -302,18 +310,19 @@ public class MainActivity extends AppCompatActivity {
     };
 
     //VERIFY FINGER
-    private int verifyFingerPrints(){
-        int employeeId=0 ;
-        if(fingerCaptured!= null){
+    private int verifyFingerPrints() {
+        int employeeId = 0;
+        if (fingerCaptured != null) {
             FingerprintTemplate fingerprintCapturedTemplate = helper.createTemplate(fingerCaptured);
-            employeeId = helper.verifyFingerPrint(fingerprintCapturedTemplate,listDbFingerPrints);
-        }else{
-            Toast.makeText(getApplicationContext(),"Empreinte invalide...",Toast.LENGTH_LONG).show();
+            employeeId = helper.verifyFingerPrint(fingerprintCapturedTemplate, listDbFingerPrints);
+        } else {
+            Toast.makeText(getApplicationContext(), "Empreinte invalide...", Toast.LENGTH_LONG).show();
         }
         return employeeId;
     }
+
     //LOAD ALL THE FINGERPRINTS FROM DB
-    public class LoadFingerPrintsFromDB extends AsyncTask<String,String,List<EmployeeFingerTemplate>> {
+    public class LoadFingerPrintsFromDB extends AsyncTask<String, String, List<EmployeeFingerTemplate>> {
 
         @Override
         protected List<EmployeeFingerTemplate> doInBackground(String... strings) {
@@ -323,108 +332,106 @@ public class MainActivity extends AppCompatActivity {
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
-            showProgress("Please wait....",true);
+            showProgress("Please wait....", true);
         }
 
         @Override
         protected void onPostExecute(List<EmployeeFingerTemplate> fingerPrints) {
             super.onPostExecute(fingerPrints);
             listDbFingerPrints = fingerPrints;
-            Log.d("FINGERPRINT2","FOUND : "+listDbFingerPrints.size());
+            Log.d("FINGERPRINT2", "FOUND : " + listDbFingerPrints.size());
             //tvStatus.setText("QTY FINGERPRINTS" +" : "+listDbFingerPrints.size());
-            showProgress("Ready!",false);
+            showProgress("Ready!", false);
         }
     }
-    private void showProgress(String msg,boolean show) {
-        if (dialog == null)
-        {
+
+    private void showProgress(String msg, boolean show) {
+        if (dialog == null) {
             dialog = new ProgressDialog(MainActivity.this);
             dialog.setMessage(msg);
             dialog.setCancelable(false);
         }
 
-        if (show)
-        {
+        if (show) {
             dialog.show();
-        } else
-        {
+        } else {
             dialog.dismiss();
         }
     }
+
     //Shows a message by using Snackbar
     private void showMessage(Boolean isSuccessful, String message) {
         Snackbar snackbar = Snackbar.make(findViewById(android.R.id.content), message, Snackbar.LENGTH_LONG);
 
-        if (isSuccessful)
-        {
+        if (isSuccessful) {
             snackbar.getView().setBackgroundColor(ContextCompat.getColor(MainActivity.this, R.color.colorAccent));
-        } else
-        {
+        } else {
             snackbar.getView().setBackgroundColor(ContextCompat.getColor(MainActivity.this, R.color.design_default_color_error));
         }
 
         snackbar.show();
     }
+
     //LOAD DATA FROM SERVER
     //GET ALL THE PRODUCTS
-    private void getAllProducts(){
-        showProgress("Products Synchronization starts...",true);
+    private void getAllProducts() {
+        showProgress("Products Synchronization starts...", true);
         ApiInterface apiService =
                 ApiClient.getClient().create(ApiInterface.class);
-        Log.d("CREDENTIALS",Email+" | "+Password);
-        Call<JsonObject> call = apiService.getAllProducts(Email,Password);
+        Log.d("CREDENTIALS", Email + " | " + Password);
+        Call<JsonObject> call = apiService.getAllProducts(Email, Password);
         call.enqueue(new Callback<JsonObject>() {
             @Override
             public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
-                Log.d("SERVER",response.message());
+                Log.d("SERVER", response.message());
                 JSONObject jsonObject = null;
                 try {
                     jsonObject = new JSONObject(new Gson().toJson(response.body()));
-                     //GET ALL PRODUCTS
+                    //GET ALL PRODUCTS
                     JSONArray arrayProducts = jsonObject.getJSONArray("Products");
-                    Log.d("SERVER OBJ",arrayProducts.toString());
+                    Log.d("SERVER OBJ", arrayProducts.toString());
                     //EMPTY THE PRODUCTS TABLE
                     db.emptyTable("products");
                     for (int i = 0; i < arrayProducts.length(); i++) {
                         JSONObject data = arrayProducts.getJSONObject(i);
-                       int productID = data.getInt("ProduitId");
-                       int categoryID = data.getInt("CategoryId");
-                       String productDESC = data.getString("Description");
-                       double productPrice = data.getDouble("Prix");
-                       String productIMG = data.getString("IconeUrl")+".jpg";
-                        Item product = new Item(productID,categoryID,categoryID,productDESC,productPrice,productIMG);
+                        int productID = data.getInt("ProduitId");
+                        int categoryID = data.getInt("CategoryId");
+                        String productDESC = data.getString("Description");
+                        double productPrice = data.getDouble("Prix");
+                        String productIMG = data.getString("IconeUrl") + ".jpg";
+                        Item product = new Item(productID, categoryID, categoryID, productDESC, productPrice, productIMG);
                         productsList.add(product);
-                        db.saveProducts(productID,categoryID,productDESC,productPrice,productIMG);
-                        Log.d("SERVER 3",productDESC);
+                        db.saveProducts(productID, categoryID, productDESC, productPrice, productIMG);
+                        Log.d("SERVER 3", productDESC);
                     }
-                    showProgress("",false);
+                    showProgress("", false);
                     showMessage(true, "Synchronization complete...");
 //                    Intent intent = getIntent();
 //                    finish();
 //                    startActivity(intent);
                 } catch (JSONException e) {
                     e.printStackTrace();
-                    showProgress("",false);
-                    showMessage(false, ""+e.toString());
+                    showProgress("", false);
+                    showMessage(false, "" + e.toString());
                 }
             }
 
             @Override
             public void onFailure(Call<JsonObject> call, Throwable t) {
-                showProgress("",false);
-                showMessage(false,"PLEASE VERIFY YOUR CREDENTIALS OR  NETWORK CONNECTION...");
+                showProgress("", false);
+                showMessage(false, "PLEASE VERIFY YOUR CREDENTIALS OR  NETWORK CONNECTION...");
                 //Toast.makeText(getApplicationContext(), "Unable to fetch json: " + t.getMessage(), Toast.LENGTH_LONG).show();
-                Log.d("SERVER",t.getMessage());
+                Log.d("SERVER", t.getMessage());
             }
         });
     }
 
     //GET ALL THE EMPLOYEES REFERENCES
-    private void getEmployeesReferences(){
-        showProgress("Employee Synchronization starts...",true);
+    private void getEmployeesReferences() {
+        showProgress("Employee Synchronization starts...", true);
         ApiInterface apiService =
                 ApiClient.getClient().create(ApiInterface.class);
-        Call<JsonObject> call = apiService.getEmployeesReferences(Email,Password);
+        Call<JsonObject> call = apiService.getEmployeesReferences(Email, Password);
         call.enqueue(new Callback<JsonObject>() {
             @Override
             public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
@@ -438,65 +445,65 @@ public class MainActivity extends AppCompatActivity {
                     db.emptyTable("employes");
                     //EMPTY THE FINGERPRINTS TABLE
                     db.emptyTable("empreintes");
-                    Log.d("SERVER REP","REFERENCES COUNT : "+array.length());
+                    Log.d("SERVER REP", "REFERENCES COUNT : " + array.length());
                     for (int i = 0; i < array.length(); i++) {
-                         int employeeID = array.getInt(i);
-                         getEmployeeInfo(employeeID,array.length(),i+1);
+                        int employeeID = array.getInt(i);
+                        getEmployeeInfo(employeeID, array.length(), i + 1);
                     }
                 } catch (JSONException e) {
                     e.printStackTrace();
-                    showProgress("",false);
+                    showProgress("", false);
                     showMessage(true, e.toString());
                 }
             }
 
             @Override
             public void onFailure(Call<JsonObject> call, Throwable t) {
-                showProgress("",false);
-                showMessage(false,"PLEASE VERIFY YOUR CREDENTIALS OR  NETWORK CONNECTION...");
+                showProgress("", false);
+                showMessage(false, "PLEASE VERIFY YOUR CREDENTIALS OR  NETWORK CONNECTION...");
                 //Toast.makeText(getApplicationContext(), "Unable to fetch json: " + t.getMessage(), Toast.LENGTH_LONG).show();
-                Log.d("SERVER",t.getMessage());
+                Log.d("SERVER", t.getMessage());
             }
         });
     }
 
     //GET EMPLOYEES INFO
-    private void getEmployeeInfo(int employeeRef,int employeeCount,int position){
+    private void getEmployeeInfo(int employeeRef, int employeeCount, int position) {
         ApiInterface apiService =
                 ApiClient.getClient().create(ApiInterface.class);
-        Call<JsonObject> call = apiService.getEmployee(employeeRef,Email,Password);
+        Call<JsonObject> call = apiService.getEmployee(employeeRef, Email, Password);
         call.enqueue(new Callback<JsonObject>() {
             @Override
             public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
-                Log.d("SERVER EMP",response.body().toString());
+                Log.d("SERVER EMP", response.body().toString());
                 JSONObject jsonObject = null;
-               try {
+                try {
                     jsonObject = new JSONObject(new Gson().toJson(response.body()));
                     String employee_FirstName = jsonObject.getString("Prenom");
                     String employee_LastName = jsonObject.getString("Nom");
-                    String employee_CIN = jsonObject.getString("CIN");
-                    int  employee_ID = jsonObject.getInt("EmployeId");
-                    int  employee_Enterprise = 1;
+                    String employee_CIN = jsonObject.getString("CIN").trim();
+                    int employee_ID = jsonObject.getInt("EmployeId");
+                    int employee_Enterprise = 1;
                     //SAVE EMPLOYEE IN LOCAL DATABASE
-                    Employee employee = new Employee(employee_ID,employee_Enterprise,employee_CIN,employee_FirstName,employee_LastName);
+                    Employee employee = new Employee(employee_ID, employee_Enterprise, employee_CIN, employee_FirstName, employee_LastName);
                     db.saveEmployees(employee);
-                    Log.d("SERVER 1",employee_FirstName);
-                    Log.d("EMPLOYEE","EMPLOYEE : "+employee_FirstName);
+                    Log.d("SERVER 1", employee_FirstName);
+                    Log.d("EMPLOYEE", "EMPLOYEE : " + employee_FirstName);
 
                     //GET FINGER PRINTS
                     JSONArray array = jsonObject.getJSONArray("Fingers");
-                    Log.d("FINGER PRINTS","FINGER PRINTS : "+array.length());
+                    Log.d("FINGER PRINTS", "FINGER PRINTS : " + array.length());
 
                     for (int i = 0; i < array.length(); i++) {
                         JSONObject data = array.getJSONObject(i);
                         String finger = data.getString("Finger");
-                        byte[] fp =helper.base64ToByteArray(data.getString("FingerPrint"));
+                        byte[] fp = helper.base64ToByteArray(data.getString("FingerPrint"));
                         byte[] tp = helper.base64ToByteArray(data.getString("Template"));
-                        db.saveFingerPrintsFromServer(employee_ID,finger,fp,tp);
-                        Log.d("SERVER 2","EMPLOYE ID : "+employee_ID);
-                        Log.d("POSITION "+position,"CURRENT POS : "+employeeCount);
-                        if(position == employeeCount){
-                            showProgress("",false);
+                        db.saveFingerPrintsFromServer(employee_ID, finger, fp, tp);
+                        Log.d("SERVER 2", "EMPLOYE ID : " + employee_ID);
+                        Log.d("POSITION " + position, "CURRENT POS : " + employeeCount);
+                        if (position == employeeCount) {
+                            showProgress("", false);
                             showMessage(true, "Synchronization complete...");
                             //RELOAD THE MAIN SCREEN
                             finish();
@@ -507,127 +514,64 @@ public class MainActivity extends AppCompatActivity {
 
                 } catch (JSONException e) {
                     e.printStackTrace();
-                   Log.d("SERVER ERR",e.toString());
+                    Log.d("SERVER ERR", e.toString());
                 }
             }
 
             @Override
             public void onFailure(Call<JsonObject> call, Throwable t) {
-                showProgress("",false);
-                showMessage(false,"PLEASE VERIFY YOUR CREDENTIALS OR  NETWORK CONNECTION...");
+                showProgress("", false);
+                showMessage(false, "PLEASE VERIFY YOUR CREDENTIALS OR  NETWORK CONNECTION...");
                 //Toast.makeText(getApplicationContext(), "Unable to fetch json: " + t.getMessage(), Toast.LENGTH_LONG).show();
-                Log.d("SERVER",t.getMessage());
+                Log.d("SERVER", t.getMessage());
             }
         });
     }
 
-    //GET ALL THE EMPLOYEES
-//    private void getEmployees(){
-//        ApiInterface apiService =
-//                ApiClient.getClient().create(ApiInterface.class);
-//        Call<JsonObject> call = apiService.getAllEmployees("All");
-//        call.enqueue(new Callback<JsonObject>() {
-//            @Override
-//            public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
-//                //Log.d("SERVER",response.body().toString());
-//                JSONObject jsonObject = null;
-//                try {
-//                    jsonObject = new JSONObject(new Gson().toJson(response.body()));
-//                    //GET ALL EMPLOYEES
-//                    JSONArray array = jsonObject.getJSONArray("Employees");
-//                    //EMPTY THE EMPLOYEES TABLE
-//                    db.emptyTable("employes");
-//                    for (int i = 0; i < array.length(); i++) {
-//                        JSONObject data = array.getJSONObject(i);
-//                        Employee employee = new Employee(data.getInt("id"),data.getInt("entreprise_id"),data.getString("employe_code"),data.getString("employe_prenom"),data.getString("employe_nom"));
-//                        db.saveEmployees(employee);
-//                        Log.d("SERVER 1",data.getString("employe_prenom"));
-//                    }
-//
-//                    //GET ALL FINGERPRINTS
-//                    JSONArray arraySub = jsonObject.getJSONArray("FingerPrints");
-//                    //EMPTY THE FINGERPRINTS TABLE
-//                    db.emptyTable("empreintes");
-//                    for (int i = 0; i < arraySub.length(); i++) {
-//                        JSONObject data = arraySub.getJSONObject(i);
-//                        int employeeId=data.getInt("employe_id");
-//                        byte[] fp =helper.base64ToByteArray(data.getString("finger_print"));
-//                        byte[] tp = helper.base64ToByteArray(data.getString("template"));
-//                        db.saveFingerPrintsFromServer(employeeId,"",fp,tp);
-//                        Log.d("SERVER 2","EMPLOYE ID : "+employeeId);
-//                    }
-//
-//                    showProgress("",false);
-//                    showMessage(true, "Synchronisation terminée...");
-//                } catch (JSONException e) {
-//                    e.printStackTrace();
-//                }
-//            }
-//
-//            @Override
-//            public void onFailure(Call<JsonObject> call, Throwable t) {
-//                showProgress("",false);
-//                showMessage(false, t.getMessage());
-//                //Toast.makeText(getApplicationContext(), "Unable to fetch json: " + t.getMessage(), Toast.LENGTH_LONG).show();
-//                Log.d("SERVER",t.getMessage());
-//            }
-//        });
-//    }
 
     //SYNCHRONIZE THE PRODUCTS FROM SERVER
     private void synchronizeProducts() {
         AlertDialog.Builder builder;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
-        {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             builder = new AlertDialog.Builder(MainActivity.this, android.R.style.Theme_Material_Dialog_Alert);
-        } else
-        {
+        } else {
             builder = new AlertDialog.Builder(MainActivity.this);
         }
         builder.setCancelable(false);
         builder.setTitle("Sync Products")
                 .setMessage("Do you really want to SYNC PRODUCTS?")
-                .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener()
-                {
-                    public void onClick(DialogInterface dialog, int which)
-                    {
+                .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
                         getAllProducts();//Get Products fom server
                     }
                 })
-                .setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener()
-                {
-                    public void onClick(DialogInterface dialog, int which)
-                    {
+                .setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
                         // do nothing
                     }
                 })
                 .show();
     }
+
     // SYNCHRONIZE THE PRODUCTS FROM SERVER
     private void synchronizeEmployees() {
         AlertDialog.Builder builder;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
-        {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             builder = new AlertDialog.Builder(MainActivity.this, android.R.style.Theme_Material_Dialog_Alert);
-        } else
-        {
+        } else {
             builder = new AlertDialog.Builder(MainActivity.this);
         }
         builder.setCancelable(false);
         builder.setTitle("Sync Employees")
                 .setMessage("Do you really want to SYNC EMPLOYEES?")
-                .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener()
-                {
-                    public void onClick(DialogInterface dialog, int which)
-                    {
+                .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
                         getEmployeesReferences();
                         //getEmployees();//Get Products fom server
                     }
                 })
-                .setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener()
-                {
-                    public void onClick(DialogInterface dialog, int which)
-                    {
+                .setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
                         // do nothing
                     }
                 })

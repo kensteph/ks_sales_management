@@ -13,24 +13,42 @@
         android:label="@string/app_name"
         android:requestLegacyExternalStorage="true"
         android:roundIcon="@mipmap/ic_launcher_round"
-        android:usesCleartextTraffic="true"
         android:supportsRtl="true"
-        android:theme="@style/AppTheme">
-        <activity android:name=".MainActivity">
+        android:theme="@style/AppTheme.NoActionBar"
+        android:usesCleartextTraffic="true">
+        <activity android:name=".activities.SyncSales"
+            android:theme="@style/AppTheme.NoActionBar" ></activity>
+        <activity
+            android:name=".activities.ManualSales"
+            android:theme="@style/AppTheme.NoActionBar" />
+        <!--
+               Set to true if your app is Standalone, that is, it does not require the handheld
+               app to run.
+        -->
+        <meta-data
+            android:name="com.google.android.wearable.standalone"
+            android:value="true" />
+
+        <activity
+            android:name=".activities.EmployeeDetails"
+            android:label="Employee Details"
+            android:theme="@style/AppTheme.NoActionBar" />
+        <activity
+            android:name=".activities.MainActivity"
+            android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".ScannerActivity" />
-        <activity android:name=".LoginActivity" />
-        <activity android:name=".SyncFingerPrintToServer" />
-        <activity android:name=".ProductsList" />
-        <activity android:name=".EmployeeListActivity" />
-        <activity android:name=".SalesListActivity" />
-        <activity android:name=".AddFingerPrintActivity" />
-
+        <activity android:name=".activities.ScannerActivity" />
+        <activity android:name=".activities.LoginActivity" />
+        <activity android:name=".activities.SyncFingerPrintToServer" android:theme="@style/AppTheme.NoActionBar"/>
+        <activity android:name=".activities.ProductsList" />
+        <activity android:name=".activities.EmployeeListActivity" />
+        <activity android:name=".activities.SalesListActivity" />
+        <activity android:name=".activities.AddFingerPrintActivity" />
     </application>
 
 </manifest>

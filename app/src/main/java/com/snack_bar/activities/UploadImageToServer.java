@@ -1,4 +1,4 @@
-package com.snack_bar;
+package com.snack_bar.activities;
 
 import android.app.ProgressDialog;
 import android.content.Context;
@@ -20,6 +20,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.machinezoo.sourceafis.FingerprintTemplate;
+import com.snack_bar.R;
 import com.snack_bar.database.BackupData;
 import com.snack_bar.network.ApiClient;
 import com.snack_bar.network.ApiInterface;

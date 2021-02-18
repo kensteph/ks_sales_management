@@ -14,6 +14,7 @@ import com.snack_bar.model.FingerPrintTemp;
 import com.snack_bar.model.Item;
 import com.snack_bar.model.Order;
 import com.snack_bar.model.SaleItemListModel;
+import com.snack_bar.model.SalesReportModel;
 import com.snack_bar.util.Helper;
 
 import java.util.ArrayList;
@@ -24,7 +25,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     private Context context;
     private final String TAG = "INIT_DB";
     private static final int databaseVersion = 1;
-    private static final String databaseName = "POS1";
+    private static final String databaseName = "POS2";
     private Helper helper;
     // Table Names
     private static final String TABLE_CATEGORIES = "categories";
@@ -55,6 +56,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     String TB_SALES= "CREATE TABLE sales(" +
             "vente_id INTEGER PRIMARY KEY AUTOINCREMENT," +
+            "        type_vente INTEGER ," +
             "        material_id TEXT," +
             "        employe_id INTEGER," +
             " vendeur_id INTEGER," +
@@ -62,6 +64,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             "        date_vente DATETIME DEFAULT CURRENT_TIMESTAMP);";
 
     String TB_SALES_DETAILS= "CREATE TABLE sale_details(" +
+            "date_vente DATE ," +
+            "type_vente INTEGER ," +
             "vente_id INTEGER ," +
             "        produit_id INTEGER," +
             "        quantite INTEGER," +
@@ -170,14 +174,15 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.close();
     }
     //SAVE SALE DETAILS | insert data using transaction and prepared statement
-    public boolean saveSaleDetails(List<Order> saleDetails, int materialID, int employeeID, int cashier, Double totalPrice) {
+    public boolean saveSaleDetails(List<Order> saleDetails, int materialID, int employeeID, int cashier, Double totalPrice,int type_vente) {
         boolean done=false;
+        String saleDate = helper.getCurrentDate();
         SQLiteDatabase db = this.getWritableDatabase();
         db.beginTransactionNonExclusive();
         try {
             // INSERT DATA TO SALES TB
-            String query="INSERT INTO "+TABLE_SALES+" (material_id,employe_id,vendeur_id,prix_total) " +
-                    " VALUES("+materialID+","+employeeID+","+cashier+","+totalPrice+")";
+            String query="INSERT INTO "+TABLE_SALES+" (material_id,employe_id,vendeur_id,prix_total,date_vente,type_vente) " +
+                    " VALUES("+materialID+","+employeeID+","+cashier+","+totalPrice+",'"+saleDate+"',"+type_vente+")";
             db.execSQL(query);
             //GET ID SALE
             String query1 = "SELECT vente_id from sales order by vente_id DESC limit 1";
@@ -192,8 +197,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 Order order = saleDetails.get(i);
                 Item item =order.item;
                 // INSERT DATA TO SALES TB
-                String query3="INSERT INTO "+TABLE_SALES_DETAILS+" (vente_id,produit_id,quantite,prix_unitaire) " +
-                        " VALUES("+saleID+","+item.id+","+order.quantity+","+item.unitPrice+")";
+                String query3="INSERT INTO "+TABLE_SALES_DETAILS+" (vente_id,produit_id,quantite,prix_unitaire,date_vente,type_vente) " +
+                        " VALUES("+saleID+","+item.id+","+order.quantity+","+item.unitPrice+",'"+saleDate+"',"+type_vente+")";
                 db.execSQL(query3);
             }
 
@@ -238,7 +243,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public List<Item> getProducts() {
         SQLiteDatabase db = this.getWritableDatabase();
         List<Item> listItems = new ArrayList<Item>(); // Create an ArrayList object
-        String selectQuery ="SELECT * FROM products  ORDER BY sub_category_id";
+        String selectQuery ="SELECT * FROM products  ORDER BY product_name";
         Cursor cursor2 = db.rawQuery(selectQuery, null);
         while(cursor2.moveToNext()) {
             int id = cursor2.getInt(cursor2.getColumnIndexOrThrow("id"));
@@ -262,7 +267,10 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             String dateV= cursor2.getString(cursor2.getColumnIndexOrThrow("date_vente"));
             double priceTotal = cursor2.getDouble(cursor2.getColumnIndexOrThrow("prix_total"));
             int saleId= cursor2.getInt(cursor2.getColumnIndexOrThrow("vente_id"));
+            int saleType= cursor2.getInt(cursor2.getColumnIndexOrThrow("type_vente"));//IF MANUAL OR NOT
+
             sale.setSaleDate(dateV);
+            sale.setSaleType(saleType);
             //SALES DETAILS
             List<Order> details =getSaleDetails(saleId);
             Log.d("DB","DESCRIPTION : "+details.size());
@@ -278,7 +286,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             String nom = cursor2.getString(cursor2.getColumnIndexOrThrow("employe_nom"));
             String code = cursor2.getString(cursor2.getColumnIndexOrThrow("employe_code"));
             int employe_id = cursor2.getInt(cursor2.getColumnIndexOrThrow("employe_id"));
-            String full_name = saleId+" - "+prenom+" "+nom+" | "+employe_id;
+            String full_name = saleId+" - "+prenom+" "+nom+" | "+code;
             sale.setEmployeeName(full_name);
             sale.setEmployee(employe_id);
             sale.setCashier(cursor2.getInt(cursor2.getColumnIndexOrThrow("vendeur_id")));
@@ -341,6 +349,18 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
         cursor2.close();
         return nb;
+    }
+    //NUMBER LINES  DETAILS FOUND
+    public Double getSalesTotalAmount() {
+        SQLiteDatabase db = this.getWritableDatabase();
+        String selectQuery ="select  SUM(prix_total) as total  from sales";
+        Cursor cursor2 = db.rawQuery(selectQuery, null);
+        Double amount=0.0;
+        if(cursor2.moveToNext()) {
+            amount = cursor2.getDouble(cursor2.getColumnIndexOrThrow("total"));
+        }
+        cursor2.close();
+        return amount;
     }
     //DELETE SALES DETAILS
     public boolean deleteSaleDetails(int saleId,int productId) {
@@ -444,7 +464,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public List<Employee> getAllEmployeesFromDB() {
         SQLiteDatabase db = this.getWritableDatabase();
         List<Employee> employeeList = new ArrayList<Employee>(); // Create an ArrayList object
-        String query="SELECT * FROM employes";
+        String query="SELECT * FROM employes ORDER BY employe_code ASC";
         Cursor cursor2 = db.rawQuery(query, null);
         while(cursor2.moveToNext()) {
             String prenom = cursor2.getString(cursor2.getColumnIndexOrThrow("employe_prenom"));
@@ -496,6 +516,25 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         cursor2.close();
         return employee;
     }
+
+    //GET SINGLE EMPLOYEES FROM THE DB
+    public Employee getEmployeeInfoByCode(String employeeCode) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        Employee employee = null;
+        String query="SELECT * FROM employes WHERE employe_code='"+employeeCode+"'";
+        Log.d("SQL","REQUEST : "+query);
+        Cursor cursor2 = db.rawQuery(query, null);
+        while(cursor2.moveToNext()) {
+            String prenom = cursor2.getString(cursor2.getColumnIndexOrThrow("employe_prenom"));
+            String nom = cursor2.getString(cursor2.getColumnIndexOrThrow("employe_nom"));
+            String code = cursor2.getString(cursor2.getColumnIndexOrThrow("employe_code"));
+            int idEmp = cursor2.getInt(cursor2.getColumnIndexOrThrow("employe_id"));
+            int entreprise_id = cursor2.getInt(cursor2.getColumnIndexOrThrow("entreprise_id"));
+            employee = new Employee(idEmp,entreprise_id,code,prenom,nom);
+        }
+        cursor2.close();
+        return employee;
+    }
     //GET ONLY FINGERPRINT TEMPLATE
     public List<EmployeeFingerTemplate> getFingersTemplate() {
         SQLiteDatabase db = this.getWritableDatabase();
@@ -534,6 +573,47 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         Log.d("FINGERPRINT1","FOUND : "+fingerPrintTmp.size());
         cursor2.close();
         return fingerPrintTmp;
+    }
+
+    //========================== REPORT =========================================
+
+    public List<SalesReportModel> getSalesProductsReport() {
+        SQLiteDatabase db = this.getWritableDatabase();
+        List<SalesReportModel> listItems = new ArrayList<SalesReportModel>(); // Create an ArrayList object
+        String selectQuery ="select date(date_vente) as sale_date,product_name ,image, SUM(quantite) as qty_sold,unit_price,prix_unitaire*SUM(quantite) as total from sale_details,products where sale_details.produit_id=products.id  group by produit_id  ,date(date_vente) ORDER BY product_name";
+        Cursor cursor2 = db.rawQuery(selectQuery, null);
+        while(cursor2.moveToNext()) {
+            String saleDate= cursor2.getString(cursor2.getColumnIndexOrThrow("sale_date"));
+            String productName= cursor2.getString(cursor2.getColumnIndexOrThrow("product_name"));
+            String productImage= cursor2.getString(cursor2.getColumnIndexOrThrow("image"));
+            int qtySold = cursor2.getInt(cursor2.getColumnIndexOrThrow("qty_sold"));
+            double unitPrice = cursor2.getDouble(cursor2.getColumnIndexOrThrow("unit_price"));
+            double amountSold = cursor2.getDouble(cursor2.getColumnIndexOrThrow("total"));
+
+            SalesReportModel productReport = new SalesReportModel();
+            productReport.setSaleDate(saleDate);
+            productReport.setProductName(productName);
+            productReport.setProductImage(productImage);
+            productReport.setQuantitySold(qtySold);
+            productReport.setProductPrice(unitPrice);
+            productReport.setAmountSold(amountSold);
+            listItems.add(productReport);
+        }
+        Log.d(TAG, "REQ : "+selectQuery);
+        Log.d(TAG, "COUNT : "+listItems.size());
+        cursor2.close();
+        return listItems;
+    }
+    //NUMBER LINES  DETAILS FOUND
+    public String getSalesReportSummary() {
+        SQLiteDatabase db = this.getWritableDatabase();
+        String selectQuery ="SELECT COUNT(*) as tot FROM sale_details ";
+        Cursor cursor2 = db.rawQuery(selectQuery, null);
+        int salesCount = getSalesDetailsCount();
+        Double salesAmount = getSalesTotalAmount();
+        String summary="Sales (Products : "+salesCount+"     Amount : "+salesAmount+")";
+        cursor2.close();
+        return summary;
     }
 
 }

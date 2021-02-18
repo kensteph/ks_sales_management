@@ -9,6 +9,15 @@ public class SaleItemListModel {
     private int materialId,employee,cashier;
     private String employeeName;
     private double total;
+    private int saleType;
+
+    public int getSaleType() {
+        return saleType;
+    }
+
+    public void setSaleType(int saleType) {
+        this.saleType = saleType;
+    }
 
     public double getTotal() {
         return total;

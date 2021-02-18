@@ -1,4 +1,4 @@
-package com.snack_bar;
+package com.snack_bar.activities;
 
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
@@ -23,6 +23,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 
 import com.google.android.material.snackbar.Snackbar;
+import com.snack_bar.R;
 import com.snack_bar.database.DatabaseHelper;
 import com.snack_bar.model.Employee;
 import com.snack_bar.model.FingerPrintTemp;
@@ -54,7 +55,7 @@ public class AddFingerPrintActivity extends AppCompatActivity {
         Intent dataFromActivity = getIntent();
         Employee employee = (Employee) dataFromActivity.getSerializableExtra("Employe");
         selectedEmployeeID = employee.getEmployee_id();
-        String employeeInfo = employee.getEmployee_prenom() + " " + employee.getEmployee_nom() + " | " + selectedEmployeeID;
+        String employeeInfo = employee.getEmployee_code()+ " | " + employee.getEmployee_prenom() + " " + employee.getEmployee_nom() ;
         getSupportActionBar().setTitle(employeeInfo);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         //HELPER

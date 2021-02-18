@@ -1,12 +1,7 @@
 package com.snack_bar.adapter;
 
 import android.annotation.SuppressLint;
-import android.app.AlertDialog;
 import android.content.Context;
-import android.content.DialogInterface;
-import android.os.AsyncTask;
-import android.os.Build;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,12 +9,10 @@ import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.snack_bar.R;
-import com.snack_bar.SalesListActivity;
 import com.snack_bar.database.DatabaseHelper;
 import com.snack_bar.model.SaleItemListModel;
 
@@ -47,67 +40,12 @@ public class SaleListAdapter extends RecyclerView.Adapter<SaleListAdapter.SalesV
         SaleItemListModel sales = salesList.get(position);
         holder.saleDate.setText(sales.getSaleDate());
         String employeeInfo = sales.getEmployeeName();
-//        if(employeeInfo.length()>30){
-//            employeeInfo = employeeInfo.substring(0,29)+"...";
-//        }
         holder.employee.setText(employeeInfo.toUpperCase());
         holder.cashier.setText("");
         holder.description.setText(sales.getSaleDescription());
         boolean isExpandable = sales.isExpandable();
         holder.myExpandableLayout.setVisibility(isExpandable ? View.VISIBLE : View.GONE);
-        holder.btnDelete.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                deleteRecord(position,view);
-            }
-        });
-    }
-
-    private void deleteRecord(int position,View v) {
-        SaleItemListModel sales = salesList.get(position);
-        AlertDialog.Builder builder;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
-        {
-            builder = new AlertDialog.Builder(v.getContext(), android.R.style.Theme_Material_Dialog_Alert);
-        } else
-        {
-            builder = new AlertDialog.Builder(context);
-        }
-        builder.setCancelable(false);
-        builder.setTitle("Sale Deletion "+sales.getSaleId())
-                .setMessage("Do you want to delete this sale ? \n\n"+sales.getEmployeeName()+"\n"+sales.getSaleDescription())
-                .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener()
-                {
-                    public void onClick(DialogInterface dialog, int which)
-                    {
-                        db.deleteSale(sales.getSaleId());
-                        salesList.remove(position);
-                        notifyDataSetChanged();
-                        int nbSales = salesList.size();
-                        String text = "";
-                        if(nbSales >1){
-                            text = nbSales+" Sales to Sync";
-                        }else{
-                            if(nbSales==0){
-                                text = "No Sale to Sync";
-                                SalesListActivity.btnSynchronizeSales.setEnabled(false);
-                            }else{
-                                text = nbSales+" Sale to Sync";
-                            }
-                        }
-                        SalesListActivity.btnSynchronizeSales.setText(text);
-                        Toast.makeText(context,"SALE DELETED ID : "+sales.getSaleId(),Toast.LENGTH_LONG).show();
-                        Log.d("DELETE", "onClick: "+sales.toString());
-                    }
-                })
-                .setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener()
-                {
-                    public void onClick(DialogInterface dialog, int which)
-                    {
-                        // do nothing
-                    }
-                })
-                .show();
+        holder.btnDelete.setVisibility(View.GONE);
     }
 
     @Override
@@ -145,18 +83,5 @@ public class SaleListAdapter extends RecyclerView.Adapter<SaleListAdapter.SalesV
 
         }
     }
-
-//DELETE SALE IN THE BACKGROUND
-public class DeleteSale extends AsyncTask<Integer, Void, Boolean>
-{
-
-    @Override
-    protected Boolean doInBackground(Integer... integers) {
-        return db.deleteSale(integers[0]);
-    }
-
-
-}
-
 
 }

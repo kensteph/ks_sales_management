@@ -21,7 +21,7 @@
             android:layout_height="wrap_content"
             android:id="@+id/txtEmployee"
             android:text="Nom de l'employé"
-            android:textSize="18sp"
+            android:textSize="14sp"
             android:padding="16dp"
             android:textColor="@color/colorPrimary"
             android:ellipsize="end"
@@ -48,7 +48,8 @@
             android:layout_height="wrap_content"
             android:id="@+id/txtSaleDate"
             android:text="ID et Date de la transaction "
-            android:textSize="19sp"
+            android:textSize="14sp"
+            android:textStyle="bold"
             android:textColor="#0A0A0B"
             />
         <TextView
@@ -56,7 +57,7 @@
             android:layout_height="wrap_content"
             android:id="@+id/txtCashier"
             android:text="Nom du Caissier"
-            android:textSize="20sp"
+            android:textSize="14sp"
             android:layout_alignParentEnd="true"
             android:textColor="#838488"
             />
@@ -66,7 +67,7 @@
             android:id="@+id/txtDescription"
             android:text="Description de la vente"
             android:layout_below="@id/txtSaleDate"
-            android:textSize="18sp"
+            android:textSize="14sp"
             android:textColor="#151617"
             />
 
