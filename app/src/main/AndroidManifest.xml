@@ -16,8 +16,11 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme.NoActionBar"
         android:usesCleartextTraffic="true">
-        <activity android:name=".activities.SyncSales"
-            android:theme="@style/AppTheme.NoActionBar" ></activity>
+        <activity android:name=".activities.SyncStuffReturn"></activity>
+        <activity android:name=".activities.StuffReturn" />
+        <activity
+            android:name=".activities.SyncSales"
+            android:theme="@style/AppTheme.NoActionBar" />
         <activity
             android:name=".activities.ManualSales"
             android:theme="@style/AppTheme.NoActionBar" />
@@ -44,7 +47,9 @@
         </activity>
         <activity android:name=".activities.ScannerActivity" />
         <activity android:name=".activities.LoginActivity" />
-        <activity android:name=".activities.SyncFingerPrintToServer" android:theme="@style/AppTheme.NoActionBar"/>
+        <activity
+            android:name=".activities.SyncFingerPrintToServer"
+            android:theme="@style/AppTheme.NoActionBar" />
         <activity android:name=".activities.ProductsList" />
         <activity android:name=".activities.EmployeeListActivity" />
         <activity android:name=".activities.SalesListActivity" />

@@ -55,7 +55,10 @@ public interface ApiInterface {
     @POST("Sales/Post")
     Call<JsonObject> postSales(@Body JsonObject json);
 
-
+    //POST STUFF RETURN  TO SERVER
+    @Headers({"Accept: application/json", "Content-Type: application/json"})
+    @POST("Flatwares/Post")
+    Call<JsonObject> postStuffReturn(@Body JsonObject json);
 
 
 

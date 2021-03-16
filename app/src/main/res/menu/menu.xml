@@ -17,7 +17,7 @@
         android:id="@+id/manage_finger"
         android:icon="@drawable/ic_sync_24" />
 
-    <item android:title="Manual Sales"
+    <item android:title="Manual Sales / Stuff"
         android:id="@+id/manual_sales"
         android:icon="@drawable/ic_sync_24" />
     <item android:title="Sales"
@@ -27,6 +27,9 @@
         android:id="@+id/sync_sales"
         android:icon="@drawable/ic_sync_24" />
 
+    <item android:title="Sync Stuff Return"
+        android:id="@+id/sync_stuff"
+        android:icon="@drawable/ic_sync_24" />
 
 
     <item android:title="Logout"

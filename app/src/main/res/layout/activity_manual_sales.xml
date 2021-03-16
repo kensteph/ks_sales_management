@@ -35,6 +35,8 @@
                 android:orientation="vertical"
                 android:layout_centerHorizontal="true"
                 >
+                <include layout="@layout/radio_group_layout" />
+
                 <TextView
                     android:id="@+id/txSale"
                     android:layout_marginTop="10dp"

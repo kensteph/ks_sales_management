@@ -20,6 +20,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -59,9 +60,10 @@ import retrofit2.Response;
 
 public class MainActivity extends AppCompatActivity {
 
-    private TextView tvStatus, tvError;
+    private TextView tvStatus, tvError, txSale;
     private Fingerprint fingerprint;
     private Button buttonRetry;
+    private RadioGroup radioGroup;
     private byte[] fingerCaptured;
     private DatabaseHelper db;
     private List<EmployeeFingerTemplate> listDbFingerPrints;
@@ -76,6 +78,7 @@ public class MainActivity extends AppCompatActivity {
     SharedPreferences sp;
     private String Email;
     private String Password;
+    private int salesOrStuffReturn = 1; //BY DEFAULT Sales
 
     //DRAWER MENU
     DrawerLayout drawer;
@@ -129,12 +132,28 @@ public class MainActivity extends AppCompatActivity {
         tvStatus = (TextView) findViewById(R.id.tvStatus);
         tvError = (TextView) findViewById(R.id.tvError);
         buttonRetry = (Button) findViewById(R.id.btnRetry);
+        radioGroup = (RadioGroup) findViewById(R.id.rg_sales_return);
+        txSale = (TextView) findViewById(R.id.txSale);
 
         //buttonRetry.setVisibility(View.GONE);
         buttonRetry.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 startScan();
+            }
+        });
+
+        //Radio group
+        radioGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(RadioGroup group, int checkedId) {
+                if (checkedId == R.id.rb_sales) {
+                    txSale.setText("NEW SALE");
+                    salesOrStuffReturn = 1;
+                } else {
+                    txSale.setText("STUFF RETURN");
+                    salesOrStuffReturn = 0;
+                }
             }
         });
 
@@ -186,6 +205,9 @@ public class MainActivity extends AppCompatActivity {
                 return true;
             case R.id.sync_sales:
                 startActivity(new Intent(MainActivity.this, SyncSales.class));
+                return true;
+            case R.id.sync_stuff:
+                startActivity(new Intent(MainActivity.this, SyncStuffReturn.class));
                 return true;
             case R.id.manage_finger:
                 startActivity(new Intent(MainActivity.this, SyncFingerPrintToServer.class));
@@ -278,7 +300,13 @@ public class MainActivity extends AppCompatActivity {
             byte[] image;
             String errorMessage = "empty";
             int status = msg.getData().getInt("status");
-            Intent intent = new Intent(MainActivity.this, ProductsList.class);
+            Intent intent ;
+            if(salesOrStuffReturn == 1) { //SALES
+                intent = new Intent(MainActivity.this, ProductsList.class);
+            }else {  //STUFF RETURN
+                intent = new Intent(MainActivity.this, StuffReturn.class);
+            }
+
             intent.putExtra("status", status);
             if (status == Status.SUCCESS) {
                 image = msg.getData().getByteArray("img");
@@ -292,10 +320,11 @@ public class MainActivity extends AppCompatActivity {
                     Employee match = db.getEmployeeInfo(matchId);
                     Log.d("MATCH EMP", match.toString());
                     //Toast.makeText(getApplicationContext(),"Vous etes "+match.getEmployeeId(),Toast.LENGTH_LONG).show();
-                    // Launch new intent instead of loading fragment
+
+                    // Launch  Activity
                     intent.putExtra("EmployeeFullName", match.getEmployee_code() + " | " + match.getFull_name());
                     intent.putExtra("EmployeeId", match.getEmployee_id());
-                    intent.putExtra("SaleType",0);
+                    intent.putExtra("SaleType", 0);
                     startActivity(intent);
                 } else {
                     Toast.makeText(getApplicationContext(), "Aucune correspondance...", Toast.LENGTH_LONG).show();

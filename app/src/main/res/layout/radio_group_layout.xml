@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+        <RadioGroup
+            android:id="@+id/rg_sales_return"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_margin="20dp"
+            android:background="@drawable/radio_group_backgroud"
+            android:orientation="horizontal">
+
+            <RadioButton
+                android:id="@+id/rb_sales"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:background="@drawable/radio_item_selected_background"
+                android:button="@null"
+                android:checked="true"
+                android:gravity="center"
+                android:text="SALES"
+                android:textColor="@drawable/radio_text_color_selected"
+                android:textStyle="bold"/>
+
+            <RadioButton
+                android:id="@+id/rb_stuff_return"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:background="@drawable/radio_item_selected_background"
+                android:button="@null"
+                android:checked="false"
+                android:gravity="center"
+                android:text="STUFF RETURN"
+                android:textColor="@drawable/radio_text_color_selected"
+                android:textStyle="bold"/>
+
+        </RadioGroup>
+</LinearLayout>

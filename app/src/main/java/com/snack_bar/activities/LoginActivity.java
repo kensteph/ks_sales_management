@@ -62,6 +62,7 @@ public class LoginActivity extends AppCompatActivity {
     //AUTHENTICATION
     private void login(){
         JsonObject login = new JsonObject();
+        //JSON : {"Login":{"Email":"gillesw2000@hotmail.com","Password":"R3NLO3XZA4MC3TCD"},"EmployeeId":22,"Plate":"TRUE","Spoon":"TRUE","Bottle":"FALSE","Date":"2021-03-07 07:08:46"}
         login.addProperty ("Email",email.getText().toString());
         login.addProperty("Password",password.getText().toString());
         // Using the Retrofit

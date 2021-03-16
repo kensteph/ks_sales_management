@@ -15,6 +15,7 @@ import com.snack_bar.model.Item;
 import com.snack_bar.model.Order;
 import com.snack_bar.model.SaleItemListModel;
 import com.snack_bar.model.SalesReportModel;
+import com.snack_bar.model.StuffReturnModel;
 import com.snack_bar.util.Helper;
 
 import java.util.ArrayList;
@@ -36,6 +37,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String TABLE_EMPLOYEES = "employes";
     private static final String TABLE_FINGERPRINTS = "empreintes";
     private static final String TABLE_FINGERPRINTS_TMP = "empreintes_tmp";
+    private static final String TABLE_STUFF_RETURN = "stuff_return";
 
     //SCRIPT
     String TB_CATEGORIES= "CREATE TABLE categories(" +
@@ -71,7 +73,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             "        quantite INTEGER," +
             "        prix_unitaire DOUBLE);";
 
-    String TB_EMPLOYEES=     "CREATE TABLE employes(" +
+    String TB_EMPLOYEES= "CREATE TABLE employes(" +
             "        employe_id INTEGER," +
             "        entreprise_id INTEGER," +
             "        employe_code TEXT," +
@@ -96,6 +98,15 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                     "        template TEXT," +
                     "        create_at DATETIME DEFAULT CURRENT_TIMESTAMP);";
 
+    String  TB_STUFFS = "CREATE TABLE stuff_return(" +
+                    "id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                    "date_return DATE ," +
+                    "employe_id INTEGER," +
+                    "retour_assiette TEXT," +
+                    "retour_cuillere TEXT," +
+                    "retour_bouteille TEXT" +
+                    ");";
+
     public DatabaseHelper(Context context) {
         super(context, databaseName, null, databaseVersion);
         this.context = context;
@@ -112,6 +123,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         sqLiteDatabase.execSQL(TB_SUBCATEGORIES);
         sqLiteDatabase.execSQL(TB_PRODUCTS);
         sqLiteDatabase.execSQL(TB_FINGERPRINTS_TMP);
+        sqLiteDatabase.execSQL(TB_STUFFS);
         Log.d(TAG,"DATABASE CREATED SUCCESSFULLY....");
     }
     @Override
@@ -125,6 +137,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         sqLiteDatabase.execSQL("DROP TABLE IF EXISTS empreintes");
         sqLiteDatabase.execSQL("DROP TABLE IF EXISTS empreintes_tmp");
         sqLiteDatabase.execSQL("DROP TABLE IF EXISTS products");
+        sqLiteDatabase.execSQL("DROP TABLE IF EXISTS stuff_return");
         onCreate(sqLiteDatabase);
     }
     //SAVE CATEGORIES
@@ -136,6 +149,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.insert(TABLE_CATEGORIES, null, values);
         db.close();
     }
+
     //SAVE SUBCATEGORIES
     public void saveSubCategories(int subcategoryID,int categoryID,String sub_category_name) {
         SQLiteDatabase db = this.getWritableDatabase();
@@ -147,6 +161,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.insert(TABLE_SUB_CATEGORIES, null, values);
         db.close();
     }
+
     //SAVE PRODUCTS
     public void saveProducts(int productID,int subCategoryID,String productName,double unitPrice,String image) {
         SQLiteDatabase db = this.getWritableDatabase();
@@ -160,6 +175,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         Log.d("INSERTION","INSERTION DONE");
         db.close();
     }
+
     //SAVE SALES
     public void saveSales(String materialID,int employeeID,int productID,int qty,double unitPrice,int cashier) {
         SQLiteDatabase db = this.getWritableDatabase();
@@ -173,6 +189,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.insert(TABLE_SALES, null, values);
         db.close();
     }
+
     //SAVE SALE DETAILS | insert data using transaction and prepared statement
     public boolean saveSaleDetails(List<Order> saleDetails, int materialID, int employeeID, int cashier, Double totalPrice,int type_vente) {
         boolean done=false;
@@ -210,6 +227,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         }
         return done;
     }
+
     //SAVE EMPLOYEES
     public void saveEmployees(Employee employee) {
         SQLiteDatabase db = this.getWritableDatabase();
@@ -222,6 +240,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.insert(TABLE_EMPLOYEES, null, values);
         db.close();
     }
+
     //SAVE FINGERPRINTS
     public void saveFingerPrintsFromServer(int employeeId,String finger,byte[] fingerPrint,byte[] template) {
         SQLiteDatabase db = this.getWritableDatabase();
@@ -233,6 +252,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.insert(TABLE_FINGERPRINTS, null, values);
         db.close();
     }
+
     //DELETE TABLE INFO
     public boolean emptyTable(String tableName) {
         SQLiteDatabase db = this.getWritableDatabase();
@@ -240,6 +260,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.close();
         return true;
     }
+
     public List<Item> getProducts() {
         SQLiteDatabase db = this.getWritableDatabase();
         List<Item> listItems = new ArrayList<Item>(); // Create an ArrayList object
@@ -257,6 +278,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         cursor2.close();
         return listItems;
     }
+
     public List<SaleItemListModel> getAllSales() {
         SQLiteDatabase db = this.getWritableDatabase();
         List<SaleItemListModel> saleList = new ArrayList<SaleItemListModel>(); // Create an ArrayList object
@@ -301,6 +323,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         cursor2.close();
         return saleList;
     }
+
     //GET SALES DESCRIPTION
     public List<Order> getSaleDetails(int saleId) {
         SQLiteDatabase db = this.getWritableDatabase();
@@ -323,6 +346,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         cursor2.close();
         return details;
     }
+
     //GET SALES DESCRIPTION
     public boolean deleteSale(int saleId) {
         SQLiteDatabase db = this.getWritableDatabase();
@@ -337,6 +361,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.close();
         return done;
     }
+
     //NUMBER LINES  DETAILS FOUND
     public int getSalesDetailsCount() {
         SQLiteDatabase db = this.getWritableDatabase();
@@ -350,6 +375,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         cursor2.close();
         return nb;
     }
+
     //NUMBER LINES  DETAILS FOUND
     public Double getSalesTotalAmount() {
         SQLiteDatabase db = this.getWritableDatabase();
@@ -362,6 +388,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         cursor2.close();
         return amount;
     }
+
     //DELETE SALES DETAILS
     public boolean deleteSaleDetails(int saleId,int productId) {
         SQLiteDatabase db = this.getWritableDatabase();
@@ -373,7 +400,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.close();
         return done;
     }
-
 
     //ADD FINGERPRINT FOR EMPLOYEE
     public boolean addFingerPrint(byte[] imageByteArray, int employeeId,String finger) {
@@ -388,6 +414,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.close();
         return rep;
     }
+
     //ADD FINGERPRINT FOR EMPLOYEE IN TB_FINGERPRINTS_TMP
     public boolean addTemporaryFingerPrint(List<FingerPrintTemp> fingerprints) {
         boolean rep=false;
@@ -411,6 +438,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         }
         return rep;
     }
+
     //FINGERPRINTS COUNT TO SYNC
     public int getFingerCount() {
         SQLiteDatabase db = this.getWritableDatabase();
@@ -424,6 +452,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         cursor2.close();
         return nb;
     }
+
     //GET SALES DESCRIPTION
     public boolean deleteTemporaryFingerPrints(int employeeId) {
         SQLiteDatabase db = this.getWritableDatabase();
@@ -435,6 +464,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.close();
         return done;
     }
+
     //GET INFO EMPLOYEE
     public List<FingerPrint> getAllFingersPrintsFromDB() {
         SQLiteDatabase db = this.getWritableDatabase();
@@ -460,6 +490,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         cursor2.close();
         return fingerPrintList;
     }
+
     //GET ALL EMPLOYEES FROM THE DB
     public List<Employee> getAllEmployeesFromDB() {
         SQLiteDatabase db = this.getWritableDatabase();
@@ -479,6 +510,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         cursor2.close();
         return employeeList;
     }
+
     //GET ALL EMPLOYEES WITH NO FINGER PRINTS FROM THE DB
     public List<Employee> getEmployeesWithNoFingerPrintsFromDB() {
         SQLiteDatabase db = this.getWritableDatabase();
@@ -498,6 +530,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         cursor2.close();
         return employeeList;
     }
+
     //GET SINGLE EMPLOYEES FROM THE DB
     public Employee getEmployeeInfo(int employeeID) {
         SQLiteDatabase db = this.getWritableDatabase();
@@ -535,6 +568,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         cursor2.close();
         return employee;
     }
+
     //GET ONLY FINGERPRINT TEMPLATE
     public List<EmployeeFingerTemplate> getFingersTemplate() {
         SQLiteDatabase db = this.getWritableDatabase();
@@ -573,6 +607,63 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         Log.d("FINGERPRINT1","FOUND : "+fingerPrintTmp.size());
         cursor2.close();
         return fingerPrintTmp;
+    }
+
+    //SAVE STUFF RETURN
+    public long saveStuffReturn(String dateR,int employeeID,String plate,String spoon,String bottle) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put("date_return", dateR);
+        values.put("employe_id", employeeID);
+        values.put("retour_assiette", plate);
+        values.put("retour_cuillere", spoon);
+        values.put("retour_bouteille", bottle);
+        long rep = db.insert(TABLE_STUFF_RETURN, null, values);
+        db.close();
+        return rep;
+    }
+
+    //DELETE SALES DETAILS
+    public boolean deleteStuffReturn(int returnId) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        boolean done=false;
+        String query2="DELETE FROM stuff_return WHERE id="+returnId;
+        db.execSQL(query2);
+        Log.d("DB",query2);
+        done=true;
+        db.close();
+        return done;
+    }
+    //GET ONLY FINGERPRINT TEMPLATE
+    public List<StuffReturnModel> getStuffReturn() {
+        SQLiteDatabase db = this.getWritableDatabase();
+        List<StuffReturnModel> stuffReturnModelList = new ArrayList<StuffReturnModel>(); // Create an ArrayList object
+        String query="SELECT  *,employe_code as code, employe_prenom || \" \" || employe_nom  as fullname,stuff_return.id as return_id FROM employes ,stuff_return WHERE employes.employe_id=stuff_return.employe_id  ORDER BY employe_code";
+        Cursor cursor2 = db.rawQuery(query, null);
+        while(cursor2.moveToNext()) {
+            StuffReturnModel stuffReturnModel = new StuffReturnModel();
+            String dateReturn = cursor2.getString(cursor2.getColumnIndexOrThrow("date_return"));
+            String code = cursor2.getString(cursor2.getColumnIndexOrThrow("code"));
+            int employeeId = cursor2.getInt(cursor2.getColumnIndexOrThrow("employe_id"));
+            int returnId = cursor2.getInt(cursor2.getColumnIndexOrThrow("return_id"));
+            String fullName = cursor2.getString(cursor2.getColumnIndexOrThrow("fullname"));
+            String plate =  cursor2.getString(cursor2.getColumnIndexOrThrow("retour_assiette"));
+            String spoon =  cursor2.getString(cursor2.getColumnIndexOrThrow("retour_cuillere"));
+            String bottle =  cursor2.getString(cursor2.getColumnIndexOrThrow("retour_bouteille"));
+
+            stuffReturnModel.setReturnId(returnId);
+            stuffReturnModel.setDateReturn(dateReturn);
+            stuffReturnModel.setEmployeeId(employeeId);
+            stuffReturnModel.setFullName(code+"-"+fullName);
+            stuffReturnModel.setBottleReturn(bottle);
+            stuffReturnModel.setPlateReturn(plate);
+            stuffReturnModel.setSpoonReturn(spoon);
+
+            stuffReturnModelList.add(stuffReturnModel);
+        }
+        Log.d("STUFF RETURN","FOUND : "+stuffReturnModelList.size());
+        cursor2.close();
+        return stuffReturnModelList;
     }
 
     //========================== REPORT =========================================

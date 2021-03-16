@@ -14,4 +14,9 @@
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="title_activity_employee_details">EmployeeDetails</string>
+    <string-array name="stuff">
+        <item> Plate ( Assiette )</item>
+        <item> Bottle ( Bouteille )</item>
+        <item> Spoon( Cuillère )</item>
+    </string-array>
 </resources>

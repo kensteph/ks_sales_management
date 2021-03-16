@@ -7,6 +7,8 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.RadioGroup;
+import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
@@ -20,6 +22,10 @@ public class ManualSales extends AppCompatActivity {
     private Button btnSearch;
     private EditText searchCode;
     private DatabaseHelper db;
+    private TextView txSale;
+    private RadioGroup radioGroup;
+    private int salesOrStuffReturn = 1; //BY DEFAULT Sales
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -30,6 +36,21 @@ public class ManualSales extends AppCompatActivity {
 
         btnSearch = (Button) findViewById(R.id.btnSearch);
         searchCode = (EditText) findViewById(R.id.et_employeeCode);
+        radioGroup = (RadioGroup) findViewById(R.id.rg_sales_return);
+        txSale = (TextView) findViewById(R.id.txSale);
+        //Radio group
+        radioGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(RadioGroup group, int checkedId) {
+                if(checkedId == R.id.rb_sales){
+                    txSale.setText("NEW MANUAL SALE");
+                    salesOrStuffReturn = 1;
+                }else{
+                    txSale.setText("STUFF RETURN");
+                    salesOrStuffReturn = 0;
+                }
+            }
+        });
         btnSearch.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -45,9 +66,13 @@ public class ManualSales extends AppCompatActivity {
                         String fn = employee.getEmployee_code() + " | " + employee.getFull_name();
                         String codeEmp = employee.getEmployee_code().trim();
                         int idEmp = employee.getEmployee_id();
-
                         Log.d("EMPLOYEE", "FULL NAME :  " + fn + " ID : " + idEmp);
-                        Intent intent = new Intent(ManualSales.this, EmployeeDetails.class);
+                        Intent intent;
+                        if(salesOrStuffReturn == 1) { //SALES
+                            intent = new Intent(ManualSales.this, EmployeeDetails.class);
+                        }else {  //STUFF RETURN
+                            intent = new Intent(ManualSales.this, StuffReturn.class);
+                        }
                         intent.putExtra("FirstName", first_name);
                         intent.putExtra("LastName", last_name);
                         intent.putExtra("EmployeeFullName", fn);
