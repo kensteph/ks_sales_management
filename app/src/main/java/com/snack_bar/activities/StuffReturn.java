@@ -1,7 +1,6 @@
 package com.snack_bar.activities;
 
 import android.app.ProgressDialog;
-import android.content.DialogInterface;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -9,18 +8,22 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import androidx.appcompat.app.ActionBar;
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.snackbar.Snackbar;
 import com.snack_bar.R;
+import com.snack_bar.adapter.StuffAdapter;
 import com.snack_bar.database.DatabaseHelper;
+import com.snack_bar.model.Stuff;
 import com.snack_bar.util.Helper;
 
 import java.util.ArrayList;
+import java.util.List;
 
-public class StuffReturn extends AppCompatActivity {
+public class StuffReturn extends AppCompatActivity implements StuffAdapter.StuffCallBack {
     private Button mPickStuff, btn_save_stuff;
     private ProgressDialog dialog;
     private TextView mStuffReturn;
@@ -29,7 +32,11 @@ public class StuffReturn extends AppCompatActivity {
     private ArrayList<Integer> stuffReturnByUser = new ArrayList<>();
     private DatabaseHelper db;
     private Helper helper;
-    String plate, spoon, bottle;
+    String plate="0", spoon="0", bottle="0";
+    private List<Stuff> stuffList;
+    private RecyclerView recyclerView;
+    private StuffAdapter stuffAdapter;
+    private int employeeSelectedID;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,99 +45,29 @@ public class StuffReturn extends AppCompatActivity {
         ActionBar actionBar = getSupportActionBar();
         //GET THE INFO FROM THE ACTIVITY
         String EmployeeFullName = getIntent().getStringExtra("EmployeeFullName");
-        int employeeSelectedID = getIntent().getIntExtra("EmployeeId", 0);
+        employeeSelectedID = getIntent().getIntExtra("EmployeeId", 0);
         actionBar.setHomeButtonEnabled(true);
         actionBar.setDisplayHomeAsUpEnabled(true);
         actionBar.setTitle(EmployeeFullName);
 
         helper = new Helper();
         db = new DatabaseHelper(this);
+        stuffList = new ArrayList<>();
+        stuffList.add(new Stuff(1, "Plate (Assiette)", R.drawable.plate, false));
+        stuffList.add(new Stuff(3, "Spoon (Cuillère)", R.drawable.couvert, false));
+        stuffList.add(new Stuff(2, "Bottle (Bouteille)", R.drawable.bottle, false));
 
         //INIT COMPONENT
-        mPickStuff = (Button) findViewById(R.id.btn_pick_stuff);
+        recyclerView = (RecyclerView) findViewById(R.id.rv_stuff_to_return);
         btn_save_stuff = (Button) findViewById(R.id.btn_save_stuff);
-        mStuffReturn = (TextView) findViewById(R.id.tv_stuff_return);
+
+
+        stuffAdapter = new StuffAdapter(getBaseContext(), this, stuffList);
+        recyclerView.setAdapter(stuffAdapter);
+        recyclerView.setHasFixedSize(true);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
         btn_save_stuff.setVisibility(View.GONE);
-
-        listStuff = getResources().getStringArray(R.array.stuff);
-        checkedStuff = new boolean[listStuff.length];
-
-        mPickStuff.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                AlertDialog.Builder mBuilder = new AlertDialog.Builder(StuffReturn.this);
-                mBuilder.setTitle("Stuff List");
-                mBuilder.setMultiChoiceItems(listStuff, checkedStuff, new DialogInterface.OnMultiChoiceClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int position, boolean isChecked) {
-                        Log.e("BEFORE", "ITEMS :" + stuffReturnByUser.toString() + " POS : " + position + "  IS CHECKED : " + isChecked);
-
-                            if (isChecked) {
-                                if (!stuffReturnByUser.contains(position)) {
-                                    stuffReturnByUser.add(position);
-                                }
-                            }else{
-                                if (stuffReturnByUser.size()==1) {
-                                    stuffReturnByUser.clear();
-                                }else {
-                                    stuffReturnByUser.remove(position);
-                                }
-                            }
-                        Log.e("AFTER", "ITEMS :" + stuffReturnByUser.toString() + " POS : " + position + "  IS CHECKED : " + isChecked);
-                    }
-                });
-                mBuilder.setCancelable(false);
-                mBuilder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        String stuffSelected = "";
-                        bottle = "0";
-                        plate = "0";
-                        spoon = "0";
-                        for (int i = 0; i < stuffReturnByUser.size(); i++) {
-                            String stuff = listStuff[stuffReturnByUser.get(i)];
-                            stuffSelected = stuffSelected + stuff;
-                            if (i != stuffReturnByUser.size() - 1) {
-                                stuffSelected = "\n" + stuffSelected + ", ";
-                            }
-                            if (stuff.contains("Bottle")) {
-                                bottle = "1";
-                            }
-                            if (stuff.contains("Plate")) {
-                                plate = "1";
-                            }
-                            if (stuff.contains("Spoon")) {
-                                spoon = "1";
-                            }
-                        }
-                        mStuffReturn.setText(stuffSelected);
-                        mPickStuff.setVisibility(View.GONE);
-                        btn_save_stuff.setVisibility(View.VISIBLE);
-                    }
-                });
-                mBuilder.setNegativeButton("DISMISS", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        dialog.dismiss();
-                    }
-                });
-
-                mBuilder.setNeutralButton("Clear All", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        for (int i = 0; i < checkedStuff.length; i++) {
-                            checkedStuff[i] = false;
-                            stuffReturnByUser.clear();
-                            mStuffReturn.setText("");
-                        }
-                    }
-                });
-
-                AlertDialog mDialog = mBuilder.create();
-                mDialog.show();
-            }
-        });
 
         btn_save_stuff.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -146,6 +83,18 @@ public class StuffReturn extends AppCompatActivity {
                 finish();
             }
         });
+    }
+
+    public void updateUi() {
+        long res = db.saveStuffReturn(helper.getCurrentDate(), employeeSelectedID, plate, spoon, bottle);
+        boolean type = false;
+        String msg = "Error...";
+        if (res != -1) {
+            type = true;
+            msg = "Done..";
+        }
+        showMessage(type, msg);
+        finish();
     }
 
     private void showProgress(String msg, boolean show) {
@@ -173,4 +122,43 @@ public class StuffReturn extends AppCompatActivity {
         snackbar.show();
     }
 
+    @Override
+    public void onSelectStuff(Stuff stuff) {
+        int nbSelected=0;
+        for (int i=0;i<stuffList.size();i++){
+            Stuff stuffSelected = stuffList.get(i);
+            String stuffName = stuffSelected.getStuffName();
+            if(stuffSelected.isSelected()){
+                nbSelected++;
+                if (stuffName.contains("Bottle")) {
+                    bottle = "1";
+                }
+                if (stuffName.contains("Plate")) {
+                    plate = "1";
+                }
+                if (stuffName.contains("Spoon")) {
+                    spoon = "1";
+                }
+            }else{
+                if (stuffName.contains("Bottle")) {
+                    bottle = "0";
+                }
+                if (stuffName.contains("Plate")) {
+                    plate = "0";
+                }
+                if (stuffName.contains("Spoon")) {
+                    spoon = "0";
+                }
+            }
+            Log.e("STUFF","STUFF : "+stuffSelected.getStuffName()+" IS_SELECTED : "+stuffSelected.isSelected());
+        }
+       //DISPLAY THE BUTTON
+        if(nbSelected!=0){
+            btn_save_stuff.setVisibility(View.VISIBLE);
+        }else{
+            btn_save_stuff.setVisibility(View.GONE);
+        }
+        //SAVE THE DATA
+        Log.e("STUFF","PLATE : "+plate+" BOTTLE : "+bottle+"  SPOON : "+spoon);
+    }
 }

@@ -206,6 +206,18 @@ public class ProductsList extends AppCompatActivity implements ProductListAdapte
         updateOrderTotal(orderList);
         updateBadge(orderList);
     }
+
+    private int getTotalItems(List<Order> orderList) {
+        int totalItems = 0;
+
+        for (Order order : orderList)
+        {
+            totalItems += order.quantity;
+            Log.d("TOT",order.item.name+" UNIT PRICE "+order.item.unitPrice+" QTY : "+order.quantity+" TOTAL : "+order.extendedPrice);
+        }
+        Log.d("TOT", "GRAND TOTAL: "+totalItems);
+        return totalItems;
+    }
     private void updateBadge(List<Order> orderList) {
         if (orderList.size() == 0)
         {
@@ -213,8 +225,9 @@ public class ProductsList extends AppCompatActivity implements ProductListAdapte
             llBtnQuickSave.setVisibility(View.INVISIBLE);
         } else
         {
+            int qte = getTotalItems(orderList);
             txtCount.setVisibility(View.VISIBLE);
-            txtCount.setText(String.valueOf(orderList.size()));
+            txtCount.setText(String.valueOf(qte));
             if(employeeSelectedID!=0) {
                 llBtnQuickSave.setVisibility(View.VISIBLE);
             }
