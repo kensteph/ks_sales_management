@@ -2,16 +2,26 @@ package com.snack_bar.model;
 
 public class Stuff {
     private int stuffId;
+    private int qty;
     private String stuffName;
-    private int drawableImage;
     private boolean isSelected;
+    private String urlImage;
 
 
-    public Stuff(int stuffId, String stuffName, int drawableImage, boolean isSelected) {
+    public Stuff(int stuffId, String stuffName,int qty,String urlImage) {
         this.stuffId = stuffId;
         this.stuffName = stuffName;
-        this.drawableImage = drawableImage;
-        this.isSelected = isSelected;
+        this.urlImage = urlImage;
+        this.isSelected = false;
+        this.qty=qty;
+    }
+
+    public int getQty() {
+        return qty;
+    }
+
+    public void setQty(int qty) {
+        this.qty = qty;
     }
 
     public boolean isSelected() {
@@ -38,11 +48,10 @@ public class Stuff {
         this.stuffName = stuffName;
     }
 
-    public int getDrawableImage() {
-        return drawableImage;
+    public String getUrlImage() {
+        return urlImage;
     }
-
-    public void setDrawableImage(int drawableImage) {
-        this.drawableImage = drawableImage;
+    public void setUrlImage(String urlImage) {
+        this.urlImage = urlImage;
     }
 }

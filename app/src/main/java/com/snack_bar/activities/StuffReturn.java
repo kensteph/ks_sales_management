@@ -6,10 +6,12 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
+import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -34,6 +36,7 @@ public class StuffReturn extends AppCompatActivity implements StuffAdapter.Stuff
     private Helper helper;
     String plate="0", spoon="0", bottle="0";
     private List<Stuff> stuffList;
+    private List<Stuff> stuffListSelected;
     private RecyclerView recyclerView;
     private StuffAdapter stuffAdapter;
     private int employeeSelectedID;
@@ -53,10 +56,9 @@ public class StuffReturn extends AppCompatActivity implements StuffAdapter.Stuff
         helper = new Helper();
         db = new DatabaseHelper(this);
         stuffList = new ArrayList<>();
-        stuffList.add(new Stuff(1, "Plate (Assiette)", R.drawable.plate, false));
-        stuffList.add(new Stuff(3, "Spoon (Cuillère)", R.drawable.couvert, false));
-        stuffList.add(new Stuff(2, "Bottle (Bouteille)", R.drawable.bottle, false));
-
+        stuffListSelected = new ArrayList<>();
+        //GET STUffS
+        stuffList = db.getAllStuffsFromDB();
         //INIT COMPONENT
         recyclerView = (RecyclerView) findViewById(R.id.rv_stuff_to_return);
         btn_save_stuff = (Button) findViewById(R.id.btn_save_stuff);
@@ -65,51 +67,49 @@ public class StuffReturn extends AppCompatActivity implements StuffAdapter.Stuff
         stuffAdapter = new StuffAdapter(getBaseContext(), this, stuffList);
         recyclerView.setAdapter(stuffAdapter);
         recyclerView.setHasFixedSize(true);
-        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        //recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        recyclerView.setLayoutManager(new GridLayoutManager(this,2));
 
         btn_save_stuff.setVisibility(View.GONE);
 
         btn_save_stuff.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                long res = db.saveStuffReturn(helper.getCurrentDate(), employeeSelectedID, plate, spoon, bottle);
-                boolean type = false;
-                String msg = "Error...";
-                if (res != -1) {
-                    type = true;
-                    msg = "Done..";
+                int nbToSave=0; int saved=0;
+                for (int i=0;i<stuffList.size();i++){
+                    Stuff stuffSelected = stuffList.get(i);
+                    String stuffName = stuffSelected.getStuffName();
+                    int qty = stuffSelected.getQty();
+                    int stuff_id = stuffSelected.getStuffId();
+                    boolean ifSelected = stuffSelected.isSelected();
+                    //SAVE TO DB ONLY THE SELECTED STUFF
+                    if(ifSelected){
+                        nbToSave++;
+                        long res = db.saveStuffReturn(helper.getCurrentDate(),employeeSelectedID,stuff_id,qty);
+                        if(res != -1){
+                            saved++;
+                        }
+                        Log.e("STUFF","STUFF RETURN: "+stuffName+" QTY RETURN : "+qty);
+                    }
                 }
-                showMessage(type, msg);
-                finish();
+                Log.e("STUFF OP","STUFF RETURN OP RESULT : "+saved+" / "+nbToSave);
+        if(saved==nbToSave){
+            finish();
+            Toast.makeText(getApplicationContext(),"Stuff return successfully..", Toast.LENGTH_LONG).show();
+        }
+//                long res = db.saveStuffReturn(helper.getCurrentDate(), employeeSelectedID, plate, spoon, bottle);
+//                boolean type = false;
+//                String msg = "Error...";
+//                if (res != -1) {
+//                    type = true;
+//                    msg = "Done..";
+//                }
+//                showMessage(type, msg);
+//                finish();
             }
         });
     }
 
-    public void updateUi() {
-        long res = db.saveStuffReturn(helper.getCurrentDate(), employeeSelectedID, plate, spoon, bottle);
-        boolean type = false;
-        String msg = "Error...";
-        if (res != -1) {
-            type = true;
-            msg = "Done..";
-        }
-        showMessage(type, msg);
-        finish();
-    }
-
-    private void showProgress(String msg, boolean show) {
-        if (dialog == null) {
-            dialog = new ProgressDialog(StuffReturn.this);
-            dialog.setMessage(msg);
-            dialog.setCancelable(false);
-        }
-
-        if (show) {
-            dialog.show();
-        } else {
-            dialog.dismiss();
-        }
-    }
 
     //Shows a message by using Snackbar
     private void showMessage(Boolean isSuccessful, String message) {
@@ -128,29 +128,13 @@ public class StuffReturn extends AppCompatActivity implements StuffAdapter.Stuff
         for (int i=0;i<stuffList.size();i++){
             Stuff stuffSelected = stuffList.get(i);
             String stuffName = stuffSelected.getStuffName();
-            if(stuffSelected.isSelected()){
+            int qty = stuffSelected.getQty();
+            boolean ifSelected = stuffSelected.isSelected();
+            //ADD ONLY THE SELECTED STUFF
+            if(ifSelected){
                 nbSelected++;
-                if (stuffName.contains("Bottle")) {
-                    bottle = "1";
-                }
-                if (stuffName.contains("Plate")) {
-                    plate = "1";
-                }
-                if (stuffName.contains("Spoon")) {
-                    spoon = "1";
-                }
-            }else{
-                if (stuffName.contains("Bottle")) {
-                    bottle = "0";
-                }
-                if (stuffName.contains("Plate")) {
-                    plate = "0";
-                }
-                if (stuffName.contains("Spoon")) {
-                    spoon = "0";
-                }
+                Log.e("STUFF","STUFF : "+stuffName+" QTY RETURN : "+qty);
             }
-            Log.e("STUFF","STUFF : "+stuffSelected.getStuffName()+" IS_SELECTED : "+stuffSelected.isSelected());
         }
        //DISPLAY THE BUTTON
         if(nbSelected!=0){
@@ -158,7 +142,10 @@ public class StuffReturn extends AppCompatActivity implements StuffAdapter.Stuff
         }else{
             btn_save_stuff.setVisibility(View.GONE);
         }
-        //SAVE THE DATA
-        Log.e("STUFF","PLATE : "+plate+" BOTTLE : "+bottle+"  SPOON : "+spoon);
+    }
+
+    @Override
+    public void onIncreaseOrDecrease(Stuff stuff, String action) {
+
     }
 }

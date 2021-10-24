@@ -14,7 +14,9 @@ import com.snack_bar.model.FingerPrintTemp;
 import com.snack_bar.model.Item;
 import com.snack_bar.model.Order;
 import com.snack_bar.model.SaleItemListModel;
+import com.snack_bar.model.SaleToSyncModel;
 import com.snack_bar.model.SalesReportModel;
+import com.snack_bar.model.Stuff;
 import com.snack_bar.model.StuffReturnModel;
 import com.snack_bar.util.Helper;
 
@@ -32,6 +34,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String TABLE_CATEGORIES = "categories";
     private static final String TABLE_SUB_CATEGORIES = "sub_categories";
     private static final String TABLE_PRODUCTS = "products";
+    private static final String TABLE_STUFFS = "stuffs";
     private static final String TABLE_SALES = "sales";
     private static final String TABLE_SALES_DETAILS = "sale_details";
     private static final String TABLE_EMPLOYEES = "employes";
@@ -54,6 +57,12 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             "        product_name TEXT," +
             "        sub_category_id INTEGER," +
             "        unit_price DOUBLE," +
+            "        image TEXT);";
+
+    String TB_STUFFS_LIST = "CREATE TABLE stuffs(" +
+            "id INTEGER," +
+            "        stuff_name TEXT," +
+            "        qty INTEGER," +
             "        image TEXT);";
 
     String TB_SALES= "CREATE TABLE sales(" +
@@ -102,9 +111,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                     "id INTEGER PRIMARY KEY AUTOINCREMENT," +
                     "date_return DATE ," +
                     "employe_id INTEGER," +
-                    "retour_assiette TEXT," +
-                    "retour_cuillere TEXT," +
-                    "retour_bouteille TEXT" +
+                    "stuff_id INTEGER," +
+                    "qty INTEGER" +
                     ");";
 
     public DatabaseHelper(Context context) {
@@ -123,7 +131,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         sqLiteDatabase.execSQL(TB_SUBCATEGORIES);
         sqLiteDatabase.execSQL(TB_PRODUCTS);
         sqLiteDatabase.execSQL(TB_FINGERPRINTS_TMP);
-        sqLiteDatabase.execSQL(TB_STUFFS);
+        sqLiteDatabase.execSQL(TB_STUFFS_LIST);
+        sqLiteDatabase.execSQL(TB_STUFFS);//STUFF RETURN BY EMPLOYEES
         Log.d(TAG,"DATABASE CREATED SUCCESSFULLY....");
     }
     @Override
@@ -172,6 +181,19 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         values.put("unit_price", unitPrice);
         values.put("image", image);
         db.insert(TABLE_PRODUCTS, null, values);
+        Log.d("INSERTION","INSERTION DONE");
+        db.close();
+    }
+
+    //SAVE PRODUCTS
+    public void saveStuffs(Stuff stuff) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put("id", stuff.getStuffId());
+        values.put("stuff_name",stuff.getStuffName());
+        values.put("qty", stuff.getQty());
+        values.put("image",stuff.getUrlImage());
+        db.insert(TABLE_STUFFS, null, values);
         Log.d("INSERTION","INSERTION DONE");
         db.close();
     }
@@ -279,6 +301,26 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return listItems;
     }
 
+    //STUFFS LIST
+    //GET ALL EMPLOYEES FROM THE DB
+    public List<Stuff> getAllStuffsFromDB() {
+        SQLiteDatabase db = this.getWritableDatabase();
+        List<Stuff> stuffsList = new ArrayList<Stuff>(); // Create an ArrayList object
+        String query="SELECT * FROM stuffs ORDER BY stuff_name ASC";
+        Cursor cursor2 = db.rawQuery(query, null);
+        while(cursor2.moveToNext()) {
+            String stuff_name = cursor2.getString(cursor2.getColumnIndexOrThrow("stuff_name"));
+            String stuff_image = cursor2.getString(cursor2.getColumnIndexOrThrow("image"));
+            int id = cursor2.getInt(cursor2.getColumnIndexOrThrow("id"));
+            int qty= 1;//cursor2.getInt(cursor2.getColumnIndexOrThrow("qty"));
+            Stuff stuff = new Stuff(id,stuff_name,qty,stuff_image);
+            stuffsList.add(stuff);
+        }
+        Log.d("STUFF DATA","FOUND : "+stuffsList.size());
+        cursor2.close();
+        return stuffsList;
+    }
+
     public List<SaleItemListModel> getAllSales() {
         SQLiteDatabase db = this.getWritableDatabase();
         List<SaleItemListModel> saleList = new ArrayList<SaleItemListModel>(); // Create an ArrayList object
@@ -323,6 +365,26 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         cursor2.close();
         return saleList;
     }
+
+    //GET SALES DETAILS TO SYNC
+    public List<SaleToSyncModel> getSaleDetailsToSync() {
+        SQLiteDatabase db = this.getWritableDatabase();
+        List<SaleToSyncModel> salesToSync = new ArrayList<>(); // Create an ArrayList object
+        String query="SELECT * FROM sales,sale_details,products WHERE sales.vente_id=sale_details.vente_id AND products.id=sale_details.produit_id ";
+        Cursor cursor2 = db.rawQuery(query, null);
+        while(cursor2.moveToNext()) {
+            int product_id = cursor2.getInt(cursor2.getColumnIndexOrThrow("produit_id"));
+            int employee_id = cursor2.getInt(cursor2.getColumnIndexOrThrow("employe_id"));
+            double unitPrice = cursor2.getDouble(cursor2.getColumnIndexOrThrow("unit_price"));
+            int qty = cursor2.getInt(cursor2.getColumnIndexOrThrow("quantite"));
+            String date_sale = cursor2.getString(cursor2.getColumnIndexOrThrow("date_vente"));
+            SaleToSyncModel stsm = new SaleToSyncModel(product_id,employee_id,qty,unitPrice,date_sale);
+            salesToSync.add(stsm);
+        }
+        cursor2.close();
+        return salesToSync;
+    }
+
 
     //GET SALES DESCRIPTION
     public List<Order> getSaleDetails(int saleId) {
@@ -610,14 +672,13 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
     //SAVE STUFF RETURN
-    public long saveStuffReturn(String dateR,int employeeID,String plate,String spoon,String bottle) {
+    public long saveStuffReturn(String dateR,int employeeID,int stuff_id,int qty) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
         values.put("date_return", dateR);
         values.put("employe_id", employeeID);
-        values.put("retour_assiette", plate);
-        values.put("retour_cuillere", spoon);
-        values.put("retour_bouteille", bottle);
+        values.put("stuff_id", stuff_id);
+        values.put("qty", qty);
         long rep = db.insert(TABLE_STUFF_RETURN, null, values);
         db.close();
         return rep;
@@ -634,11 +695,15 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.close();
         return done;
     }
-    //GET ONLY FINGERPRINT TEMPLATE
+
+    //GET STUFF RETURN LIST
     public List<StuffReturnModel> getStuffReturn() {
         SQLiteDatabase db = this.getWritableDatabase();
         List<StuffReturnModel> stuffReturnModelList = new ArrayList<StuffReturnModel>(); // Create an ArrayList object
-        String query="SELECT  *,employe_code as code, employe_prenom || \" \" || employe_nom  as fullname,stuff_return.id as return_id FROM employes ,stuff_return WHERE employes.employe_id=stuff_return.employe_id  ORDER BY employe_code";
+        String query="SELECT  *,employe_code as code, employe_prenom || \" \" || employe_nom  as fullname,stuff_return.id as return_id ,stuff_return.qty as qty_return\n" +
+                "FROM employes ,stuff_return,stuffs\n" +
+                "WHERE  stuffs.id=stuff_return.stuff_id and employes.employe_id=stuff_return.employe_id  ORDER BY employe_code";
+
         Cursor cursor2 = db.rawQuery(query, null);
         while(cursor2.moveToNext()) {
             StuffReturnModel stuffReturnModel = new StuffReturnModel();
@@ -647,17 +712,20 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             int employeeId = cursor2.getInt(cursor2.getColumnIndexOrThrow("employe_id"));
             int returnId = cursor2.getInt(cursor2.getColumnIndexOrThrow("return_id"));
             String fullName = cursor2.getString(cursor2.getColumnIndexOrThrow("fullname"));
-            String plate =  cursor2.getString(cursor2.getColumnIndexOrThrow("retour_assiette"));
-            String spoon =  cursor2.getString(cursor2.getColumnIndexOrThrow("retour_cuillere"));
-            String bottle =  cursor2.getString(cursor2.getColumnIndexOrThrow("retour_bouteille"));
+            String stuff_name =  cursor2.getString(cursor2.getColumnIndexOrThrow("stuff_name"));
+            int  qty_return =  cursor2.getInt(cursor2.getColumnIndexOrThrow("qty_return"));
+            int  stuff_id =  cursor2.getInt(cursor2.getColumnIndexOrThrow("stuff_id"));
+
+            //STUFF RETURN
+            Stuff stuffReturn = new Stuff(stuff_id,stuff_name,qty_return,"");
 
             stuffReturnModel.setReturnId(returnId);
             stuffReturnModel.setDateReturn(dateReturn);
             stuffReturnModel.setEmployeeId(employeeId);
             stuffReturnModel.setFullName(code+"-"+fullName);
-            stuffReturnModel.setBottleReturn(bottle);
-            stuffReturnModel.setPlateReturn(plate);
-            stuffReturnModel.setSpoonReturn(spoon);
+            stuffReturnModel.setStuffReturnId(stuff_id);
+            stuffReturnModel.setStuffQty(qty_return);
+            stuffReturnModel.setStuffName(stuff_name);
 
             stuffReturnModelList.add(stuffReturnModel);
         }

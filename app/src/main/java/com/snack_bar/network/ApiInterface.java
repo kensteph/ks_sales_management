@@ -22,7 +22,7 @@ import retrofit2.http.Query;
 public interface ApiInterface {
     //LOGIN
     @FormUrlEncoded
-    @POST("Login/Autenticate")
+    @POST("Login/Authenticate")
     Call<Object> login(@Field("Email") String email,@Field("Password") String password);
 
     //GET PRODUCTS FROM SERVER
@@ -40,6 +40,11 @@ public interface ApiInterface {
     @POST("EmployeData/Get")
     Call<JsonObject> getEmployee(@Field("id") int employeeRef,@Field("Email") String email,@Field("Password") String password);
 
+    //GET ALL INFO ABOUT ALL EMPLOYEE
+    @FormUrlEncoded
+    @POST("EmployeData/GetAll")
+    Call<JsonObject> getAllEmployee(@Field("Email") String email,@Field("Password") String password);
+
     //POST FINGER PRINT TO SERVER
     @FormUrlEncoded
     @POST("Biometrics/Post")
@@ -55,9 +60,14 @@ public interface ApiInterface {
     @POST("Sales/Post")
     Call<JsonObject> postSales(@Body JsonObject json);
 
+    //GET STUFFS TO RETURN FROM SERVER
+    @FormUrlEncoded
+    @POST("ReturnProducts/All")
+    Call<JsonObject> getAllStuffs(@Field("Email") String email,@Field("Password") String password);
+
     //POST STUFF RETURN  TO SERVER
     @Headers({"Accept: application/json", "Content-Type: application/json"})
-    @POST("Flatwares/Post")
+    @POST("Sales/PostProductReturn")
     Call<JsonObject> postStuffReturn(@Body JsonObject json);
 
 
@@ -67,6 +77,8 @@ public interface ApiInterface {
 
     @GET("employees/")
     Call<JsonObject> getAllEmployees(@Query("TypeEmployee") String TypeEmployee);
+
+
     @FormUrlEncoded
     @POST("sales/")
     Call<JsonObject> UploadSaleToServer(@Field("data") String json);

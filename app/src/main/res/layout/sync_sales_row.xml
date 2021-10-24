@@ -27,7 +27,7 @@
         android:layout_margin="10dp"
         android:background="?attr/selectableItemBackgroundBorderless"
         android:clickable="true"
-        android:src="@drawable/coca_cola"
+        android:src="@drawable/ic_product_avatar"
          />
     <LinearLayout
         android:layout_width="wrap_content"

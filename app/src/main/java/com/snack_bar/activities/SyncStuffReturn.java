@@ -20,6 +20,8 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.snackbar.Snackbar;
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.snack_bar.R;
 import com.snack_bar.adapter.StuffReturnAdapter;
@@ -29,6 +31,7 @@ import com.snack_bar.network.ApiClient;
 import com.snack_bar.network.ApiInterface;
 import com.snack_bar.util.Helper;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -84,7 +87,7 @@ public class SyncStuffReturn extends AppCompatActivity {
         btnSynchronizeSales.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                synchronizeSales();
+                synchronizeStuffs();
             }
         });
     }
@@ -166,63 +169,37 @@ public class SyncStuffReturn extends AppCompatActivity {
         snackbar.show();
     }
 
-    //POST SALES TO SERVER
-    private void synchronizeSalesToServer(List<StuffReturnModel> stuffReturnList) {
-            showProgress("Stuff return Synchronization start....", true);
-            Log.d("SERVER", "SALES COUNT : " + stuffReturnList.size());
-            Log.d("SERVER", "SALES DETAILS TO SEND COUNT : " + numberOfSalesDetails);
-            int position = 1;
-            for (StuffReturnModel stuff : stuffReturnList) {
-                Log.d("STUFF SYNC", "STUFF RETURN ID : " + stuff.getReturnId());
-                //STUFF RETURN DETAILS
-                int nbLines = stuffReturnList.size();
-                prepareJSON(stuff, position, position, nbLines);
-                Log.d("SERVER", "STUFF RETURN PROCESSING ID  : " + stuff.getReturnId());
-                position++;
-            }
+    private void synchronizeStuffsToServer() {
+        showProgress("Stuff Return Synchronization start....", true);
+        JsonArray arrayStuffs=new JsonArray();
+        for(int i=0;i<stuffReturnList.size();i++){
+            //STUFF info
+            StuffReturnModel stuffReturn = stuffReturnList.get(i);
+            JsonObject stuffs = new JsonObject();
+            stuffs.addProperty("EmployeId", stuffReturn.getEmployeeId());
+            stuffs.addProperty("ProduitRetourId", stuffReturn.getStuffReturnId());
+            stuffs.addProperty("Quantite", stuffReturn.getStuffQty());
+            stuffs.addProperty("Date", stuffReturn.getDateReturn());
+            //ADD SINGLE OBJECT IN ARRAY OBJECT
+            arrayStuffs.add(stuffs);
+        }
 
-    }
-
-    private void prepareJSON(StuffReturnModel stuffReturn, int position, int nbLines, int posDetails) {
+        //LOGIN OBJECT
         JsonObject login = new JsonObject();
-        JsonObject obj = new JsonObject();
         login.addProperty("Email", Email);
         login.addProperty("Password", Password);
 
-        //RETURN DATA INFO
-        int returnId = stuffReturn.getReturnId();
-        String plate = stuffReturn.getPlateReturn();
-        if (Integer.parseInt(plate.trim()) != 0) {
-            plate = "True";
-        }else{
-            plate = "False";
-        }
-        String spoon = stuffReturn.getSpoonReturn();
-        if (Integer.parseInt(spoon.trim()) != 0) {
-            spoon = "True";
-        }else{
-            spoon = "False";
-        }
-        String bottle = stuffReturn.getBottleReturn();
-        if (Integer.parseInt(bottle.trim()) != 0) {
-            bottle = "True";
-        }else{
-            bottle = "False";
-        }
-        obj.addProperty("EmployeId", stuffReturn.getEmployeeId());
-        obj.addProperty("Plate", plate);
-        obj.addProperty("Spoon", spoon);
-        obj.addProperty("Bottle", bottle);
-        obj.addProperty("Date", stuffReturn.getDateReturn());
+        //FINAL OBJECT
+        JsonObject obj = new JsonObject();
+        obj.add("SaleProductReturnDataList", arrayStuffs);
         obj.add("Login", login);
 
         String data = obj.toString();
-        Log.d("SERVER", "JSON : " + data);
-        postDataToServer(obj, returnId, position, nbLines);
-
+        Log.e("SERVER", "JSON : " + data);
+        serverSync(obj);
     }
 
-    private void postDataToServer(JsonObject obj, int returnId, int position, int nbLines) {
+    private void serverSync(JsonObject obj) {
         // Using the Retrofit
         ApiInterface apiService =
                 ApiClient.getClient().create(ApiInterface.class);
@@ -231,38 +208,20 @@ public class SyncStuffReturn extends AppCompatActivity {
 
             @Override
             public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
-               // Log.e("SYNC STUFF","SERVER RESPONSE : "+ response.body().toString());
-                JSONObject jsonObject = null;
-                try {
-                    jsonObject = new JSONObject(new Gson().toJson(response.body()));
-                    if (jsonObject.has("Accepted")) { //REQUEST SUCCESSFUL
-                        Log.e("response-success", jsonObject.getString("Accepted"));
-                        //REMOVE THIS DETAILS FROM SALES DETAILS
-                        databaseHelper.deleteStuffReturn(returnId);
-                    } else {
-                        Log.e("response-failed", "SALE DETAILS DON'T SAVE"+response.code());
-                        //showMessage(false,"SALE DETAILS DON'T SAVE");
-                    }
-                    if (position == stuffReturnList.size()) {
-                        showProgress("Stuff Return Synchronization start....", false);
-                        //EMPTY THE SALES TABLE
-                        emptySalesTable(true);
-                        Log.e("DONE", "Stuff Return SYNC DONE....");
-                        stuffReturnList.clear();
-                        stuffReturnAdapter.notifyDataSetChanged();
-                        btnSynchronizeSales.setText("No more stuff to sync");
-                        tv_summary_report.setText("");
-                        btnSynchronizeSales.setEnabled(false);
-                        showMessage(true, "Synchronization complete...");
-                    }
-
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                    stuffReturnAdapter.notifyDataSetChanged();
-                    Log.e("response-failed", "STUFF RETURN DETAILS DON'T SAVE" + e.getMessage());
+                //Log.e("SYNC STUFF","SERVER RESPONSE : "+ response.body().toString());
+                JsonObject jsonObject = null;
+                //jsonObject = new JsonObject(new Gson().toJson(response.body()));
+                jsonObject = response.body();
+                //if (jsonObject.has("Accepted")) { //REQUEST SUCCESSFUL
+                if(response.isSuccessful()){
+                    Log.e("response-success", jsonObject.toString());
+                    emptyStuffReturnTable(true,"Synchronization with Server Done...");
+                } else {
                     showProgress("Stuff Return Synchronization start....", false);
-                    showMessage(false, "STUFF RETURN ID " + returnId + " CANNOT BE SYNCED");
+                    Log.e("response-failed", "STUFFS DON'T SYNC"+response.toString());
+                    emptyStuffReturnTable(false,"No sales match this articles...");
                 }
+
 
             }
 
@@ -276,27 +235,20 @@ public class SyncStuffReturn extends AppCompatActivity {
         });
     }
 
-    private void emptySalesTable(boolean showMessage) {
-        //GET NUMBER OF LINES IN SALES_DETAILS
-        numberOfSalesDetails = stuffReturnList.size();
-        Log.d("SERVER", "SALES DETAILS TO SEND COUNT : " + numberOfSalesDetails);
-        if (numberOfSalesDetails == 0) {
-            //EMPTY THE SALES TABLE
-            databaseHelper.emptyTable("stuff_return");
-            stuffReturnList.clear();
-            recyclerView.setAdapter(stuffReturnAdapter);
-            stuffReturnAdapter.notifyDataSetChanged();
-            btnSynchronizeSales.setText("No more stuff to sync");
-            tv_summary_report.setText("");
-            if (showMessage) {
-                showMessage(true, "Synchronization complete...");
-            }
-            btnSynchronizeSales.setEnabled(false);
-        }
+    private void emptyStuffReturnTable(boolean result,String msg) {
+        //EMPTY THE TABLE STUFFS RETURN IN LOCAL DB
+        databaseHelper.emptyTable("stuff_return");
+        stuffReturnList.clear();
+        stuffReturnAdapter.notifyDataSetChanged();
+        btnSynchronizeSales.setText("No more stuff to sync");
+        tv_summary_report.setText("");
+        btnSynchronizeSales.setEnabled(false);
+        showProgress("Stuff Return Synchronization start....", false);
+        showMessage(result, msg);
     }
 
     //DIALOG SYNCHRONIZE THE SALES FROM SERVER
-    private void synchronizeSales() {
+    private void synchronizeStuffs() {
         AlertDialog.Builder builder;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             builder = new AlertDialog.Builder(SyncStuffReturn.this, android.R.style.Theme_Material_Dialog_Alert);
@@ -308,7 +260,7 @@ public class SyncStuffReturn extends AppCompatActivity {
                 .setMessage("Do you really want to SYNC THOSE Returns ?")
                 .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int which) {
-                        synchronizeSalesToServer(stuffReturnList);
+                        synchronizeStuffsToServer();
                     }
                 })
                 .setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {

@@ -48,9 +48,14 @@ public class ProductListAdapter extends RecyclerView.Adapter<ProductListAdapter.
     public void onBindViewHolder(ProductsVH holder, @SuppressLint("RecyclerView") final int position) {
         //db=new DatabaseHelper(context);
         Item product = productsList.get(position);
-        Glide.with(context)
-                .load(product.url)
-                .into(holder.productImage);
+        if(product.url.isEmpty()){
+            holder.productImage.setImageResource(R.drawable.ic_product_avatar);
+        }else{
+            Glide.with(context)
+                    .load(product.url)
+                    .into(holder.productImage);
+        }
+
         holder.productName.setText(product.name);
         holder.productPrice.setText(String.format("%.2f", product.unitPrice));
         //CLICK ON THE CARD

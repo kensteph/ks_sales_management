@@ -36,26 +36,10 @@ public class StuffReturnAdapter extends RecyclerView.Adapter<StuffReturnAdapter.
     @Override
     public void onBindViewHolder(SalesVH holder, @SuppressLint("RecyclerView") final int position) {
         StuffReturnModel stuffReturn = salesList.get(position);
-
-//        Glide.with(context)
-//                .load(productReport.getProductImage())
-//                .into(holder.productImage);
         holder.employee.setText(stuffReturn.getFullName());
         holder.returnDate.setText(stuffReturn.getDateReturn());
-        String description = "";
-        String plate = stuffReturn.getPlateReturn();
-        if(Integer.parseInt(plate.trim())!=0){
-            description = description + "Plate \n";
-        }
-        String spoon = stuffReturn.getSpoonReturn();
-        if(Integer.parseInt(spoon.trim())!=0){
-            description = description + "Spoon \n";
-        }
-        String bottle = stuffReturn.getBottleReturn();
-        if(Integer.parseInt(bottle.trim())!=0){
-            description = description + "Bottle \n";
-        }
-        Log.e("RETURN",""+stuffReturn.getFullName()+" | "+"PLATE : "+plate+" SPOON : "+spoon+" BOTTLE : "+bottle);
+        String description = stuffReturn.getStuffQty()+" "+stuffReturn.getStuffName();
+        Log.e("RETURN",""+stuffReturn.getFullName()+" | "+"STUFF : "+description);
         holder.description.setText(description);
 
 

@@ -36,9 +36,14 @@ public class SalesReportAdapter extends RecyclerView.Adapter<SalesReportAdapter.
     @Override
     public void onBindViewHolder(SalesVH holder, @SuppressLint("RecyclerView") final int position) {
         SalesReportModel productReport = salesList.get(position);
-        Glide.with(context)
-                .load(productReport.getProductImage())
-                .into(holder.productImage);
+        if(productReport.getProductImage().isEmpty()){
+            holder.productImage.setImageResource(R.drawable.ic_product_avatar);
+        }else{
+            Glide.with(context)
+                    .load(productReport.getProductImage())
+                    .into(holder.productImage);
+        }
+
         holder.productName.setText(productReport.getProductName());
         holder.productQty.setText("Qty : "+productReport.getQuantitySold());
         holder.productPrice.setText("Price : "+productReport.getProductPrice().toString());

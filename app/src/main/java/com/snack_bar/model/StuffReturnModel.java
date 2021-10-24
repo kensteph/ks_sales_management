@@ -5,9 +5,10 @@ public class StuffReturnModel {
     private String dateReturn;
     private int employeeId;
     private String fullName;
-    private String plateReturn;
-    private String spoonReturn;
-    private String bottleReturn;
+    private int stuffReturnId;
+    private String stuffName;
+    private int stuffQty;
+
 
     public int getReturnId() {
         return returnId;
@@ -41,27 +42,27 @@ public class StuffReturnModel {
         this.employeeId = employeeId;
     }
 
-    public String getPlateReturn() {
-        return plateReturn;
+    public int getStuffReturnId() {
+        return stuffReturnId;
     }
 
-    public void setPlateReturn(String plateReturn) {
-        this.plateReturn = plateReturn;
+    public void setStuffReturnId(int stuffReturnId) {
+        this.stuffReturnId = stuffReturnId;
     }
 
-    public String getSpoonReturn() {
-        return spoonReturn;
+    public String getStuffName() {
+        return stuffName;
     }
 
-    public void setSpoonReturn(String spoonReturn) {
-        this.spoonReturn = spoonReturn;
+    public void setStuffName(String stuffName) {
+        this.stuffName = stuffName;
     }
 
-    public String getBottleReturn() {
-        return bottleReturn;
+    public int getStuffQty() {
+        return stuffQty;
     }
 
-    public void setBottleReturn(String bottleReturn) {
-        this.bottleReturn = bottleReturn;
+    public void setStuffQty(int stuffQty) {
+        this.stuffQty = stuffQty;
     }
 }
