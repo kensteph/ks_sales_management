@@ -60,6 +60,7 @@ public class EmployeeListActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_employee_list);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setTitle("Fingerprints Taking List");
         //LIST OF EMPLOYEES FROM DB
         employeesList = new ArrayList<Employee>();
         helper = new Helper();

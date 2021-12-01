@@ -7,8 +7,8 @@ import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
 public class ApiClient {
-    //public static final String BASE_URL = "https://saudeezagency.com/sales/";
-     // public static final String BASE_URL = "http://107.180.77.51:8080/PointOfSale/api/";
+    //API TEST
+    //public static final String BASE_URL = "http://08e1-165-225-223-1.ngrok.io/";
     public static final String BASE_URL = "http://192.169.153.227/TAGO/api/";
     //Login: { 'Email': 'gillesw2000@hotmail.com', 'Password': 'Password@123' }
 

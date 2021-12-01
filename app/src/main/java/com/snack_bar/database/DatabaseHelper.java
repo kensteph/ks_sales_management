@@ -273,6 +273,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         values.put("template", template);
         db.insert(TABLE_FINGERPRINTS, null, values);
         db.close();
+        Log.e("DB",finger+" Fingerprints saved successfully...");
     }
 
     //DELETE TABLE INFO
@@ -515,7 +516,21 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return nb;
     }
 
-    //GET SALES DESCRIPTION
+    //GET THE MAX USER ID FROM THE DB
+    public int getMaxUserIdFromLocalDB() {
+        SQLiteDatabase db = this.getWritableDatabase();
+        String selectQuery ="SELECT MAX(employe_id) as max_id FROM employes ";
+        Cursor cursor2 = db.rawQuery(selectQuery, null);
+        int nb=0;
+        if(cursor2.moveToNext()) {
+            nb = cursor2.getInt(cursor2.getColumnIndexOrThrow("max_id"));
+        }
+
+        cursor2.close();
+        return nb;
+    }
+
+    //DELETE TMP FINGERPRINTS
     public boolean deleteTemporaryFingerPrints(int employeeId) {
         SQLiteDatabase db = this.getWritableDatabase();
         boolean done=false;
@@ -524,6 +539,19 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         Log.d("DB",query);
         done=true;
         db.close();
+        return done;
+    }
+
+    //DELETE  FINGERPRINTS
+    public boolean deleteFingerPrints(int employeeId) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        boolean done=false;
+        String query="DELETE FROM empreintes WHERE employe_id="+employeeId;
+        db.execSQL(query);
+        Log.d("DB",query);
+        done=true;
+        db.close();
+        Log.e("DB","Fingerprints remove successfully...");
         return done;
     }
 
@@ -577,18 +605,18 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public List<Employee> getEmployeesWithNoFingerPrintsFromDB() {
         SQLiteDatabase db = this.getWritableDatabase();
         List<Employee> employeeList = new ArrayList<Employee>(); // Create an ArrayList object
-        String query="SELECT * FROM employes";
+        String query="SELECT *,emp.employe_id employee_id FROM employes emp  LEFT  JOIN  empreintes fp  ON  emp.employe_id=fp.employe_id WHERE empreinte IS  NULL;";
         Cursor cursor2 = db.rawQuery(query, null);
         while(cursor2.moveToNext()) {
             String prenom = cursor2.getString(cursor2.getColumnIndexOrThrow("employe_prenom"));
             String nom = cursor2.getString(cursor2.getColumnIndexOrThrow("employe_nom"));
             String code = cursor2.getString(cursor2.getColumnIndexOrThrow("employe_code"));
-            int idEmp = cursor2.getInt(cursor2.getColumnIndexOrThrow("employe_id"));
+            int idEmp = cursor2.getInt(cursor2.getColumnIndexOrThrow("employee_id"));
             int entreprise_id = cursor2.getInt(cursor2.getColumnIndexOrThrow("entreprise_id"));
             Employee employee = new Employee(idEmp,entreprise_id,code,prenom,nom);
             employeeList.add(employee);
         }
-        Log.d("EMPLOYEE DATA","FOUND : "+employeeList.size());
+        Log.e("EMPLOYEE DATA","FOUND : "+employeeList.size());
         cursor2.close();
         return employeeList;
     }

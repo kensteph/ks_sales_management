@@ -20,6 +20,8 @@ import retrofit2.http.PartMap;
 import retrofit2.http.Query;
 
 public interface ApiInterface {
+
+//===============================================LIVE API ==================================================================
     //LOGIN
     @FormUrlEncoded
     @POST("Login/Authenticate")
@@ -30,20 +32,20 @@ public interface ApiInterface {
     @POST("Products/All")
     Call<JsonObject> getAllProducts(@Field("Email") String email,@Field("Password") String password);
 
-    //GET REFERENCES OF EMPLOYEES
-    @FormUrlEncoded
-    @POST("EmployeReferences/Get")
-    Call<JsonObject> getEmployeesReferences(@Field("Email") String email,@Field("Password") String password);
 
-    //GET ALL INFO ABOUT AN EMPLOYEE
+    //GET THE MAX USER ID FROM THE SERVER
+    @FormUrlEncoded
+    @POST("EmployeData/GetLastEmployee")
+    Call<Integer> getMaxUserIdFromServer(@Field("Email") String email,@Field("Password") String password);
+
+    //GET EMPLOYEE'S FINGERPRINTS
     @FormUrlEncoded
     @POST("EmployeData/Get")
-    Call<JsonObject> getEmployee(@Field("id") int employeeRef,@Field("Email") String email,@Field("Password") String password);
+    Call<JsonObject> getEmployeeFingerPrints(@Field("id") int employeeRef,@Field("Email") String email,@Field("Password") String password);
 
     //GET ALL INFO ABOUT ALL EMPLOYEE
-    @FormUrlEncoded
     @POST("EmployeData/GetAll")
-    Call<JsonObject> getAllEmployee(@Field("Email") String email,@Field("Password") String password);
+    Call<JsonObject> getAllEmployee(@Body JsonObject json);
 
     //POST FINGER PRINT TO SERVER
     @FormUrlEncoded
@@ -54,6 +56,10 @@ public interface ApiInterface {
     @Headers({"Accept: application/json", "Content-Type: application/json"})
     @POST("Biometrics/Post")
     Call<JsonObject> postFingerPrint(@Body JsonObject json);
+
+    @Headers({"Accept: application/json", "Content-Type: application/json"})
+    @POST("Biometrics/GetLimited")
+    Call<JsonObject> getLimitedFingerPrints(@Body JsonObject json);
 
     //POST SALES  TO SERVER
     @Headers({"Accept: application/json", "Content-Type: application/json"})

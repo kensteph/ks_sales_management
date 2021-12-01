@@ -44,17 +44,23 @@ import com.snack_bar.model.Item;
 import com.snack_bar.model.Stuff;
 import com.snack_bar.network.ApiClient;
 import com.snack_bar.network.ApiInterface;
+import com.snack_bar.network.BackgroundService;
 import com.snack_bar.util.Helper;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 import asia.kanopi.fingerscan.Fingerprint;
 import asia.kanopi.fingerscan.Status;
+import okhttp3.FormBody;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -80,6 +86,10 @@ public class MainActivity extends AppCompatActivity {
     private String Email;
     private String Password;
     private int salesOrStuffReturn = 1; //BY DEFAULT Sales
+    private JsonObject login;
+    private boolean ifSaved=false;
+    private int maxUserId = 0; //MAX USER ID IN LOCAL DB
+    private int maxUserIdServer =1000; //MAX USER ID IN SERVER DB
 
     //DRAWER MENU
     DrawerLayout drawer;
@@ -110,6 +120,7 @@ public class MainActivity extends AppCompatActivity {
         helper = new Helper();
         //DATABASE
         db = new DatabaseHelper(this);
+
         //FINGERPRINT INSTANCE FROM KANOPI
         fingerprint = new Fingerprint();
         //LIST OF FINGERPRINTS FROM DB
@@ -122,6 +133,9 @@ public class MainActivity extends AppCompatActivity {
         Email = sp.getString("email", "");
         Password = sp.getString("password", "");
         Boolean isLogin = sp.getBoolean("isLogin", false);
+        login = new JsonObject();
+        login.addProperty ("Email",Email);
+        login.addProperty("Password",Password);
 
         //LAUNCH LOGIN ACTIVITY
         if (!isLogin) {
@@ -129,6 +143,9 @@ public class MainActivity extends AppCompatActivity {
             startActivity(intent);
             finish();
         }
+        maxUserId = db.getMaxUserIdFromLocalDB();
+        Log.e("MAX_LOCAL_USER_ID",""+maxUserId);
+        getMaxUserIdFromServer();
         //LOAD COMPONENTS
         tvStatus = (TextView) findViewById(R.id.tvStatus);
         tvError = (TextView) findViewById(R.id.tvError);
@@ -195,6 +212,10 @@ public class MainActivity extends AppCompatActivity {
             case R.id.sync_employees:
                 synchronizeEmployees();
                 return true;
+            case R.id.manage_finger_local:
+                startActivity(new Intent(MainActivity.this, ImportFingerPrints.class));
+                return true;
+
             case R.id.list_employees:
                 startActivity(new Intent(MainActivity.this, EmployeeListActivity.class));
                 return true;
@@ -514,17 +535,55 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    //GET THE MAX USER ID FROM THE SERVER
+    private void  getMaxUserIdFromServer() {
+        // Using the Retrofit
+        ApiInterface apiService =ApiClient.getClient().create(ApiInterface.class);
+        Call<Integer> call = apiService.getMaxUserIdFromServer (Email,Password);
+        call.enqueue(new Callback<Integer>() {
+
+            @Override
+            public void onResponse(Call<Integer> call, Response<Integer> response) {
+                if(response.isSuccessful()){
+                    String str_server=  response.body().toString().trim();
+                    Log.e("response-success", str_server);
+                    Log.d("SERVER",response.message());
+                    maxUserIdServer = Integer.parseInt(str_server);
+                    //Toast.makeText(getApplicationContext(), "MAX USER ID : "+maxUserIdServer, Toast.LENGTH_SHORT).show();
+
+                }else{
+                    Log.e("response-success", response.message());
+                    Log.e("response-success", response.toString());
+                }
+            }
+
+
+            @Override
+            public void onFailure(Call<Integer> call, Throwable t) {
+                Log.e("response-failure", call.toString());
+                Log.e("response-failure", t.toString());
+            }
+
+        });
+
+    }
+
     //GET ALL EMPLOYEES
     private void getAllEmployees() {
         showProgress("Employees Synchronization starts...", true);
+        JsonObject params = new JsonObject();
+        params.addProperty("IdMin",maxUserId);
+        params.addProperty("IdMax",maxUserIdServer);
+        params.add("Login",login);
+
         ApiInterface apiService =
                 ApiClient.getClient().create(ApiInterface.class);
         Log.d("CREDENTIALS", Email + " | " + Password);
-        Call<JsonObject> call = apiService.getAllEmployee(Email, Password);
+        Call<JsonObject> call = apiService.getAllEmployee(params);
         call.enqueue(new Callback<JsonObject>() {
             @Override
             public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
-                Log.d("SERVER EMP", response.body().toString());
+                //Log.d("SERVER EMP", response.body().toString());
                 JSONObject jsonObject = null;
                 try {
                     jsonObject = new JSONObject(new Gson().toJson(response.body()));
@@ -533,7 +592,7 @@ public class MainActivity extends AppCompatActivity {
                     int nbEmployee = AllEmployees.length();
                     Log.d("SERVER OBJ", AllEmployees.toString());
                     //EMPTY THE EMPLOYEES TABLE
-                    db.emptyTable("employes");
+                    //db.emptyTable("employes");
                     for (int i = 0; i < nbEmployee; i++) {
                         JSONObject singleEmployee = AllEmployees.getJSONObject(i);
                         String employee_FirstName = singleEmployee.getString("Prenom");
@@ -546,20 +605,6 @@ public class MainActivity extends AppCompatActivity {
                         //SAVE EMPLOYEE IN LOCAL DATABASE
                         Employee employee = new Employee(employee_ID, employee_Enterprise, employee_CIN, employee_FirstName, employee_LastName);
                         db.saveEmployees(employee);
-
-                        //GET FINGER PRINTS
-                        JSONArray array = singleEmployee.getJSONArray("Fingers");
-                        Log.d("FINGER PRINTS", "FINGER PRINTS : " + array.length());
-
-                        for (int j = 0; j < array.length(); j++) {
-                            JSONObject data = array.getJSONObject(j);
-                            String finger = data.getString("Finger");
-                            byte[] fp = helper.base64ToByteArray(data.getString("FingerPrint"));
-                            byte[] tp = helper.base64ToByteArray(data.getString("Template"));
-                            db.saveFingerPrintsFromServer(employee_ID, finger, fp, tp);
-
-                        }
-
                     }
                     showProgress("", false);
                     Intent intent = getIntent();
@@ -571,6 +616,9 @@ public class MainActivity extends AppCompatActivity {
                     e.printStackTrace();
                     showProgress("", false);
                     showMessage(false, "" + e.toString());
+                }
+                catch (OutOfMemoryError om){
+                    showMessage(false, "" + om.toString());
                 }
             }
 
@@ -631,5 +679,7 @@ public class MainActivity extends AppCompatActivity {
                 })
                 .show();
     }
+
+
 
 }

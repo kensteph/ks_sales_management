@@ -67,8 +67,8 @@ public class StuffReturn extends AppCompatActivity implements StuffAdapter.Stuff
         stuffAdapter = new StuffAdapter(getBaseContext(), this, stuffList);
         recyclerView.setAdapter(stuffAdapter);
         recyclerView.setHasFixedSize(true);
-        //recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        recyclerView.setLayoutManager(new GridLayoutManager(this,2));
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        //recyclerView.setLayoutManager(new GridLayoutManager(this,2));
 
         btn_save_stuff.setVisibility(View.GONE);
 
@@ -97,15 +97,7 @@ public class StuffReturn extends AppCompatActivity implements StuffAdapter.Stuff
             finish();
             Toast.makeText(getApplicationContext(),"Stuff return successfully..", Toast.LENGTH_LONG).show();
         }
-//                long res = db.saveStuffReturn(helper.getCurrentDate(), employeeSelectedID, plate, spoon, bottle);
-//                boolean type = false;
-//                String msg = "Error...";
-//                if (res != -1) {
-//                    type = true;
-//                    msg = "Done..";
-//                }
-//                showMessage(type, msg);
-//                finish();
+
             }
         });
     }

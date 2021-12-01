@@ -155,7 +155,6 @@ public class SyncStuffReturn extends AppCompatActivity {
             dialog.dismiss();
         }
     }
-
     //Shows a message by using Snackbar
     private void showMessage(Boolean isSuccessful, String message) {
         Snackbar snackbar = Snackbar.make(findViewById(android.R.id.content), message, Snackbar.LENGTH_LONG);
@@ -168,7 +167,6 @@ public class SyncStuffReturn extends AppCompatActivity {
 
         snackbar.show();
     }
-
     private void synchronizeStuffsToServer() {
         showProgress("Stuff Return Synchronization start....", true);
         JsonArray arrayStuffs=new JsonArray();
@@ -198,7 +196,6 @@ public class SyncStuffReturn extends AppCompatActivity {
         Log.e("SERVER", "JSON : " + data);
         serverSync(obj);
     }
-
     private void serverSync(JsonObject obj) {
         // Using the Retrofit
         ApiInterface apiService =
@@ -219,7 +216,7 @@ public class SyncStuffReturn extends AppCompatActivity {
                 } else {
                     showProgress("Stuff Return Synchronization start....", false);
                     Log.e("response-failed", "STUFFS DON'T SYNC"+response.toString());
-                    emptyStuffReturnTable(false,"No sales match this articles...");
+                    emptyStuffReturnTable(false,"No sales match these articles...");
                 }
 
 
@@ -234,7 +231,6 @@ public class SyncStuffReturn extends AppCompatActivity {
 
         });
     }
-
     private void emptyStuffReturnTable(boolean result,String msg) {
         //EMPTY THE TABLE STUFFS RETURN IN LOCAL DB
         databaseHelper.emptyTable("stuff_return");
@@ -246,7 +242,6 @@ public class SyncStuffReturn extends AppCompatActivity {
         showProgress("Stuff Return Synchronization start....", false);
         showMessage(result, msg);
     }
-
     //DIALOG SYNCHRONIZE THE SALES FROM SERVER
     private void synchronizeStuffs() {
         AlertDialog.Builder builder;

@@ -5,15 +5,19 @@
     android:id="@+id/sync_products"
     android:icon="@drawable/ic_sync_24" />
 
-<item android:title="Sync Employees"
+    <item android:title="Sync Employees"
     android:id="@+id/sync_employees"
     android:icon="@drawable/ic_sync_24" />
 
-    <item android:title="Fingerprints"
+    <item android:title="Import Fingerprints"
+        android:id="@+id/manage_finger_local"
+        android:icon="@drawable/ic_sync_24" />
+
+    <item android:title="Fingerprints taking"
         android:id="@+id/list_employees"
         android:icon="@drawable/ic_sync_24" />
 
-    <item android:title="Sync Fingerprints"
+    <item android:title="Sync FP to Server"
         android:id="@+id/manage_finger"
         android:icon="@drawable/ic_sync_24" />
 

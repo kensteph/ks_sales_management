@@ -6,7 +6,7 @@
 
     <androidx.cardview.widget.CardView
         android:id="@+id/card_view_stuff"
-        android:layout_width="150dp"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:layout_marginTop="5dp"
@@ -19,13 +19,13 @@
         card_view:cardCornerRadius="10dp">
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_height="wrap_content"
             android:layout_gravity="center_vertical"
             android:orientation="horizontal">
             <ImageView
                 android:id="@+id/iv_stuff"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
+                android:layout_width="100dp"
+                android:layout_height="100dp"
                 android:layout_margin="5dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:clickable="true"
@@ -44,20 +44,21 @@
                 android:layout_gravity="center_vertical"
                 android:textColor="#2196F3"
                 android:textStyle="bold"
-                android:textSize="10dp"
+                android:textSize="18dp"
                 android:text="Stuff return"/>
 
             <LinearLayout
                 android:id="@+id/ll_qty_stuff_return"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:gravity="end"
                 android:layout_margin="10dp"
                 android:orientation="horizontal">
 
                 <ImageButton
                     android:id="@+id/ib_add"
-                    android:layout_width="25dp"
-                    android:layout_height="25dp"
+                    android:layout_width="50dp"
+                    android:layout_height="50dp"
                     android:src="@drawable/ic_add" />
                 <TextView
                     android:id="@+id/tv_qte_stuff_return"
@@ -68,13 +69,13 @@
                     android:layout_gravity="center_vertical"
                     android:textColor="#2196F3"
                     android:textStyle="bold"
-                    android:textSize="13dp"
+                    android:textSize="14dp"
                     android:text="Qty"/>
 
                 <ImageButton
                     android:id="@+id/ib_minus"
-                    android:layout_width="25dp"
-                    android:layout_height="25dp"
+                    android:layout_width="50dp"
+                    android:layout_height="50dp"
                     android:src="@drawable/ic_minus"
                     android:paddingBottom="25dp"/>
             </LinearLayout>
@@ -86,8 +87,8 @@
 
         <ImageView
             android:id="@+id/iv_check"
-            android:layout_width="20dp"
-            android:layout_height="20dp"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
             android:layout_gravity="end"
             />
 
