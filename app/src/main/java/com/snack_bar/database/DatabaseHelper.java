@@ -605,7 +605,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public List<Employee> getEmployeesWithNoFingerPrintsFromDB() {
         SQLiteDatabase db = this.getWritableDatabase();
         List<Employee> employeeList = new ArrayList<Employee>(); // Create an ArrayList object
-        String query="SELECT *,emp.employe_id employee_id FROM employes emp  LEFT  JOIN  empreintes fp  ON  emp.employe_id=fp.employe_id WHERE empreinte IS  NULL;";
+        String query="SELECT  DISTINCT(emp.employe_id) employee_id ,employe_prenom,employe_nom,employe_code,entreprise_id  FROM employes emp  LEFT  JOIN  empreintes fp  ON  emp.employe_id=fp.employe_id WHERE template IS  NULL;";
         Cursor cursor2 = db.rawQuery(query, null);
         while(cursor2.moveToNext()) {
             String prenom = cursor2.getString(cursor2.getColumnIndexOrThrow("employe_prenom"));

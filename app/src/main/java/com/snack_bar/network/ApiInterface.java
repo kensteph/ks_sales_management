@@ -38,10 +38,14 @@ public interface ApiInterface {
     @POST("EmployeData/GetLastEmployee")
     Call<Integer> getMaxUserIdFromServer(@Field("Email") String email,@Field("Password") String password);
 
-    //GET EMPLOYEE'S FINGERPRINTS
+    //GET SINGLE EMPLOYEE'S FINGERPRINTS
     @FormUrlEncoded
     @POST("EmployeData/Get")
     Call<JsonObject> getEmployeeFingerPrints(@Field("id") int employeeRef,@Field("Email") String email,@Field("Password") String password);
+
+    //GET MULTIPLE EMPLOYEES FINGERPRINTS
+    @POST("EmployeData/GetEmployeesFingerPoint")
+    Call<JsonObject> getLimitedFingerPrints(@Body JsonObject json);
 
     //GET ALL INFO ABOUT ALL EMPLOYEE
     @POST("EmployeData/GetAll")
@@ -56,10 +60,6 @@ public interface ApiInterface {
     @Headers({"Accept: application/json", "Content-Type: application/json"})
     @POST("Biometrics/Post")
     Call<JsonObject> postFingerPrint(@Body JsonObject json);
-
-    @Headers({"Accept: application/json", "Content-Type: application/json"})
-    @POST("Biometrics/GetLimited")
-    Call<JsonObject> getLimitedFingerPrints(@Body JsonObject json);
 
     //POST SALES  TO SERVER
     @Headers({"Accept: application/json", "Content-Type: application/json"})
@@ -83,11 +83,6 @@ public interface ApiInterface {
 
     @GET("employees/")
     Call<JsonObject> getAllEmployees(@Query("TypeEmployee") String TypeEmployee);
-
-
-    @FormUrlEncoded
-    @POST("sales/")
-    Call<JsonObject> UploadSaleToServer(@Field("data") String json);
 
     @Multipart
     @POST("finger_prints/")

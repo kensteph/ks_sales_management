@@ -44,23 +44,17 @@ import com.snack_bar.model.Item;
 import com.snack_bar.model.Stuff;
 import com.snack_bar.network.ApiClient;
 import com.snack_bar.network.ApiInterface;
-import com.snack_bar.network.BackgroundService;
 import com.snack_bar.util.Helper;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 import asia.kanopi.fingerscan.Fingerprint;
 import asia.kanopi.fingerscan.Status;
-import okhttp3.FormBody;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -377,6 +371,7 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         protected List<EmployeeFingerTemplate> doInBackground(String... strings) {
+            showProgress("Please wait....", true);
             return db.getFingersTemplate();
         }
 
@@ -537,6 +532,7 @@ public class MainActivity extends AppCompatActivity {
 
     //GET THE MAX USER ID FROM THE SERVER
     private void  getMaxUserIdFromServer() {
+        showProgress("Initializing....", true);
         // Using the Retrofit
         ApiInterface apiService =ApiClient.getClient().create(ApiInterface.class);
         Call<Integer> call = apiService.getMaxUserIdFromServer (Email,Password);
@@ -550,10 +546,11 @@ public class MainActivity extends AppCompatActivity {
                     Log.d("SERVER",response.message());
                     maxUserIdServer = Integer.parseInt(str_server);
                     //Toast.makeText(getApplicationContext(), "MAX USER ID : "+maxUserIdServer, Toast.LENGTH_SHORT).show();
-
+                    showProgress("Please wait....", false);
                 }else{
                     Log.e("response-success", response.message());
                     Log.e("response-success", response.toString());
+                    showProgress("Please wait....", false);
                 }
             }
 
@@ -562,6 +559,7 @@ public class MainActivity extends AppCompatActivity {
             public void onFailure(Call<Integer> call, Throwable t) {
                 Log.e("response-failure", call.toString());
                 Log.e("response-failure", t.toString());
+                showProgress("Please wait....", false);
             }
 
         });

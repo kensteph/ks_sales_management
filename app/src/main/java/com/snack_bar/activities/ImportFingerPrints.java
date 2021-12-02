@@ -17,6 +17,7 @@ import android.widget.TextView;
 
 import com.google.android.material.snackbar.Snackbar;
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.snack_bar.R;
 import com.snack_bar.database.DatabaseHelper;
@@ -31,6 +32,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 import retrofit2.Call;
@@ -47,9 +50,10 @@ public class ImportFingerPrints extends AppCompatActivity {
     private Helper helper;
     //SHARED PREFERENCES
     private static final String SHARED_PREF_NAME = "MY_SHARED_PREFERENCES";
-    SharedPreferences sp;
+    private SharedPreferences sp;
     private String Email;
     private String Password;
+    private JsonObject login;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -71,6 +75,10 @@ public class ImportFingerPrints extends AppCompatActivity {
         sp = getSharedPreferences(SHARED_PREF_NAME, MODE_PRIVATE);
         Email = sp.getString("email", "");
         Password = sp.getString("password", "");
+
+        login = new JsonObject();
+        login.addProperty ("Email",Email);
+        login.addProperty("Password",Password);
 
         if (nbFingerPrintsToImport == 0) {
             btnImportFingerPrints.setEnabled(false);
@@ -155,46 +163,71 @@ public class ImportFingerPrints extends AppCompatActivity {
     }
 
     //GET THE FP FOR AN EMPLOYEE FROM THE SERVER
-    private void getEmployeeFP(int employeeID){
+    private void ImportEmployeesFingerPrints(){
+        int nbEmployeesRequested = 50;
+        //PARAMS
+        JsonObject params = new JsonObject();
+        JsonArray IDS = new JsonArray();
+        //RANDOMIZE THE LIST
+        Collections.shuffle(noFingerPrintsList);
+        for(int pos=0;pos<nbEmployeesRequested;pos++){
+            Employee employee = noFingerPrintsList.get(pos);
+            int empId=employee.getEmployee_id();
+            IDS.add(empId);
+           Log.e("EMPLOYEE", pos+"-"+empId+" | "+employee.getFull_name());
+        }
+        params.add("EmployeesId",IDS);
+        params.add("Login",login);
+        Log.e("PARAMS", params.toString());
         // Using the Retrofit
         ApiInterface apiService =ApiClient.getClient().create(ApiInterface.class);
-        Call<JsonObject> call = apiService.getLimitedFingerPrints(null);
-        showProgress("Retrieving FingerPrints for employee "+employeeID,true);
+        Call<JsonObject> call = apiService.getLimitedFingerPrints(params);
+        showProgress("Fingerprints Importation starts...", true);
         call.enqueue(new Callback<JsonObject>() {
 
             @Override
             public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
-                Log.d("SERVER", response.message());
+                Log.e("SERVER_FINGERPRINTS", response.message());
+                Log.e("SERVER_FINGERPRINTS", response.body().toString());
                 JSONObject jsonObject = null;
                 try {
                     jsonObject = new JSONObject(new Gson().toJson(response.body()));
-                    //GET ALL PRODUCTS
-                    JSONArray arrayProducts = jsonObject.getJSONArray("Fingerprints");
-                    int nbObj = arrayProducts.length();
-                    Log.d("SERVER OBJ", arrayProducts.toString());
+                    //GET FINGERPRINTS
+                    JSONArray fingerPrints = jsonObject.getJSONArray("Fingerprints");
+                    int nbObj = fingerPrints.length();
+                    Log.d("SERVER OBJ", fingerPrints.toString());
                     Log.d("SERVER OBJ COUNT",""+nbObj);
                     //EMPTY THE PRODUCTS TABLE
                     //db.emptyTable("products");
-                    for (int i = 0; i < arrayProducts.length(); i++) {
-                        JSONObject data = arrayProducts.getJSONObject(i);
+                    int count=0;
+                    for (int i = 0; i < fingerPrints.length(); i++) {
+                        JSONObject singleEmployee = fingerPrints.getJSONObject(i);
                         //GET FINGER PRINTS
-//                        JSONArray array = singleEmployee.getJSONArray("Fingers");
-//                        Log.d("FINGER PRINTS", "FINGER PRINTS : " + array.length());
-//
-//                        for (int j = 0; j < array.length(); j++) {
-//                            JSONObject data = array.getJSONObject(j);
-//                            String finger = data.getString("Finger");
-//                            byte[] fp = helper.base64ToByteArray(data.getString("FingerPrint"));
-//                            byte[] tp = helper.base64ToByteArray(data.getString("Template"));
-//                            db.saveFingerPrintsFromServer(employee_ID, finger, fp, tp);
+                        int employeeID = singleEmployee.getInt("EmployeId");
+                        JSONArray array = singleEmployee.getJSONArray("Fingers");
+                        Log.d("FINGER PRINTS", "FINGER PRINTS : " + array.length());
+
+                        for (int j = 0; j < array.length(); j++) {
+                            JSONObject data = array.getJSONObject(j);
+                            String finger = data.getString("Finger");
+                            byte[] tp = helper.base64ToByteArray(data.getString("Template"));
+                            db.saveFingerPrintsFromServer(employeeID, finger,null, tp);
+                        }
+                        count++;
                     }
+                    checkListNoFingerPrints();
                     showProgress("", false);
-                    showMessage(true, "Synchronization complete...");
-//                    Intent intent = getIntent();
-//                    finish();
-//                    startActivity(intent);
+                    if(count>0){
+                        showMessage(true, count+" NEW FINGERPRINTS IMPORTED...");
+                    }else{
+                        showMessage(false, "NO FINGERPRINTS FOUND ON THE SERVER FOR THIS GROUP.RETRY!");
+                    }
+
+
+
                 } catch (JSONException e) {
                     e.printStackTrace();
+                    checkListNoFingerPrints();
                     showProgress("", false);
                     showMessage(false, "" + e.toString());
                 }
@@ -202,6 +235,7 @@ public class ImportFingerPrints extends AppCompatActivity {
 
             @Override
             public void onFailure(Call<JsonObject> call, Throwable t) {
+                checkListNoFingerPrints();
                 Log.e("response-failure", call.toString());
                 showProgress("Authentication",false);
                 showMessage(false,t.toString());
@@ -252,7 +286,7 @@ public class ImportFingerPrints extends AppCompatActivity {
                 .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int which) {
                         //IMPORT
-                        ImportFingerPrints(985);
+                        ImportEmployeesFingerPrints();
                     }
                 })
                 .setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
