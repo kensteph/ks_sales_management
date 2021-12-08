@@ -1,8 +1,12 @@
 package com.snack_bar.activities;
 
+import android.app.AlertDialog;
 import android.app.ProgressDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -43,7 +47,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class EmployeeListActivity extends AppCompatActivity {
+public class EmployeeListActivity extends AppCompatActivity implements EmployeeAdapter.IEmployeeAdapterCallback{
     private List<Employee> employeesList;
     private List<FingerPrint> listDbFingerPrints;
     private TextView tv_nb_employees;
@@ -53,7 +57,10 @@ public class EmployeeListActivity extends AppCompatActivity {
     DatabaseHelper db;
     private Helper helper;
     private ProgressDialog dialog;
-    private Button btnSynchronizeSales;
+    private static final String SHARED_PREF_NAME = "MY_SHARED_PREFERENCES";
+    private SharedPreferences sp;
+    private String Email;
+    private String Password;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,6 +68,12 @@ public class EmployeeListActivity extends AppCompatActivity {
         setContentView(R.layout.activity_employee_list);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setTitle("Fingerprints Taking List");
+
+        //GET INFO FROM SHARED PREFERENCES
+        sp = getSharedPreferences(SHARED_PREF_NAME, MODE_PRIVATE);
+        Email = sp.getString("email", "");
+        Password = sp.getString("password", "");
+
         //LIST OF EMPLOYEES FROM DB
         employeesList = new ArrayList<Employee>();
         helper = new Helper();
@@ -71,7 +84,7 @@ public class EmployeeListActivity extends AppCompatActivity {
         tv_nb_employees = (TextView) findViewById(R.id.tv_nb_employees);
         recyclerView.setHasFixedSize(true);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        adapter = new EmployeeAdapter(this, employeesList);
+        adapter = new EmployeeAdapter(this, employeesList,EmployeeListActivity.this);
         recyclerView.setAdapter(adapter);
 
         db = new DatabaseHelper(this);
@@ -138,9 +151,65 @@ public class EmployeeListActivity extends AppCompatActivity {
             }
         }
 
-        adapter = new EmployeeAdapter(this, filteredNames);
+        adapter = new EmployeeAdapter(this, filteredNames,EmployeeListActivity.this);
         recyclerView.setAdapter(adapter);
         adapter.notifyDataSetChanged();
+    }
+
+    //IMPORT SINGLE EMPLOYEE 'S FP IN LOCAL DB
+    private void ImportFingerPrints(int employeeID){
+        showProgress("Fingerprints Importation starts...", true);
+        ApiInterface apiService =
+                ApiClient.getClient().create(ApiInterface.class);
+        Log.d("CREDENTIALS", Email + " | " + Password);
+        Call<JsonObject> call = apiService.getEmployeeFingerPrints(employeeID,Email, Password);
+        call.enqueue(new Callback<JsonObject>() {
+            @Override
+            public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
+                Log.e("SERVER", response.message());
+                Log.e("SERVER", response.body().toString());
+                try {
+                    JSONObject data = new JSONObject(new Gson().toJson(response.body()));
+                    String fullName=data.getString("Nom")+" "+data.getString("Prenom");
+                    //GET ALL FINGERPRINTS
+                    JSONArray allFingers = data.getJSONArray("Fingers");
+                    int nbFingers = allFingers.length();
+                    if(nbFingers>0){
+                        //IF EMPLOYEE HAS FINGERPRINTS ALREADY
+                        db.deleteFingerPrints(employeeID);
+                        Log.e("FINGERPRINTS","THERE ARE "+nbFingers+" FINGERPRINTS FOR "+fullName);
+                        for(int i=0;i<nbFingers;i++){
+                            JSONObject finger = allFingers.getJSONObject(i);
+                            String fingerR = finger.getString("Finger");
+                            Log.e("FINGERPRINTS","FINGER :  "+fingerR);
+                            byte[] fp = helper.base64ToByteArray(finger.getString("FingerPrint"));
+                            byte[] tp = helper.base64ToByteArray(finger.getString("Template"));
+                            db.saveFingerPrintsFromServer(employeeID, fingerR, fp, tp);
+                        }
+                        showProgress("Fingerprints Importation starts...", false);
+                        showMessage(true, "Fingerprints Importation done.");
+                        editTextSearch.setText("");
+                    }else{
+                        editTextSearch.setText("");
+                        showProgress("Fingerprints Importation starts...", false);
+                        showMessage(false, "THERE ARE NO FINGERPRINTS FOR "+fullName);
+                        Log.e("FINGERPRINTS","THERE ARE NO FINGERPRINTS FOR "+fullName);
+                    }
+
+
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<JsonObject> call, Throwable t) {
+                showProgress("", false);
+                showMessage(false, "PLEASE VERIFY YOUR CREDENTIALS OR  NETWORK CONNECTION...");
+                //Toast.makeText(getApplicationContext(), "Unable to fetch json: " + t.getMessage(), Toast.LENGTH_LONG).show();
+                Log.e("SERVER", t.getMessage());
+            }
+        });
     }
 
     private void showProgress(String msg, boolean show) {
@@ -156,7 +225,6 @@ public class EmployeeListActivity extends AppCompatActivity {
             dialog.dismiss();
         }
     }
-
     //Shows a message by using Snackbar
     private void showMessage(Boolean isSuccessful, String message) {
         Snackbar snackbar = Snackbar.make(findViewById(android.R.id.content), message, Snackbar.LENGTH_LONG);
@@ -169,45 +237,34 @@ public class EmployeeListActivity extends AppCompatActivity {
 
         snackbar.show();
     }
-
-    //LOAD EMPLOYEE WITHOUT FINGERPRINTS FROM SERVER
-    private void getEmployees() {
-        showProgress("Récupération des données du serveur....", false);
-        ApiInterface apiService =
-                ApiClient.getClient().create(ApiInterface.class);
-        Call<JsonObject> call = apiService.getAllEmployees("WFP");
-        call.enqueue(new Callback<JsonObject>() {
-            @Override
-            public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
-                //Log.d("SERVER",response.body().toString());
-                JSONObject jsonObject = null;
-                try {
-                    jsonObject = new JSONObject(new Gson().toJson(response.body()));
-                    //GET ALL EMPLOYEES
-                    JSONArray array = jsonObject.getJSONArray("Employees");
-                    for (int i = 0; i < array.length(); i++) {
-                        JSONObject data = array.getJSONObject(i);
-                        Employee employee = new Employee(data.getInt("id"), data.getInt("entreprise_id"), data.getString("employe_code"), data.getString("employe_prenom"), data.getString("employe_nom"));
-                        //db.saveEmployees(employee);
-                        employeesList.add(employee);
-                        Log.d("SERVER 1", data.getString("employe_prenom"));
+    //DIALOG SYNCHRONIZE THE SALES FROM SERVER
+    private void synchronizeFingerPrints(Employee employee) {
+        AlertDialog.Builder builder;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            builder = new AlertDialog.Builder(EmployeeListActivity.this, android.R.style.Theme_Material_Dialog_Alert);
+        } else {
+            builder = new AlertDialog.Builder(EmployeeListActivity.this);
+        }
+        builder.setCancelable(false);
+        builder.setTitle("Import Fingerprints")
+                .setMessage("Do you really want to import the "+employee.getFull_name()+"'s fingerprints ?")
+                .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        ImportFingerPrints(employee.getEmployee_id());
                     }
-                    adapter.notifyDataSetChanged();
-                    showProgress("", false);
-                    showMessage(true, "Récupération terminée !!!");
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-            }
+                })
+                .setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        // do nothing
+                    }
+                })
+                .show();
+    }
 
-            @Override
-            public void onFailure(Call<JsonObject> call, Throwable t) {
-                showProgress("", false);
-                showMessage(false, t.getMessage());
-                //Toast.makeText(getApplicationContext(), "Unable to fetch json: " + t.getMessage(), Toast.LENGTH_LONG).show();
-                Log.d("SERVER", t.getMessage());
-            }
-        });
+
+    @Override
+    public void onImportFingerPrints(Employee employee) {
+        synchronizeFingerPrints(employee);
     }
 
     //LOAD EMPLOYEES FROM DB

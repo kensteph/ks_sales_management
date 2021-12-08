@@ -108,59 +108,6 @@ public class ImportFingerPrints extends AppCompatActivity {
         }
         return super.onOptionsItemSelected(item);
     }
-    //IMPORT SINGLE EMPLOYEE 'S FP IN LOCAL DB
-    private void ImportFingerPrints(int employeeID){
-        showProgress("Fingerprints Importation starts...", true);
-        List<Employee> noFingerPrintsList = new ArrayList<Employee>(); // EMPLOYEES NOT YET HAVE FINGERPRINTS
-        noFingerPrintsList = db.getEmployeesWithNoFingerPrintsFromDB();
-        Log.e("NO_FINGERPRINTS",""+noFingerPrintsList.size());
-        ApiInterface apiService =
-                ApiClient.getClient().create(ApiInterface.class);
-        Log.d("CREDENTIALS", Email + " | " + Password);
-        Call<JsonObject> call = apiService.getEmployeeFingerPrints(employeeID,Email, Password);
-        call.enqueue(new Callback<JsonObject>() {
-            @Override
-            public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
-                Log.e("SERVER", response.message());
-                Log.e("SERVER", response.body().toString());
-                try {
-                    JSONObject data = new JSONObject(new Gson().toJson(response.body()));
-                    String fullName=data.getString("Nom")+" "+data.getString("Prenom");
-                    //GET ALL FINGERPRINTS
-                    JSONArray allFingers = data.getJSONArray("Fingers");
-                    int nbFingers = allFingers.length();
-                    if(nbFingers>0){
-                        //IF EMPLOYEE HAS FINGERPRINTS ALREADY
-                        db.deleteFingerPrints(employeeID);
-                        Log.e("FINGERPRINTS","THERE ARE "+nbFingers+" FINGERPRINTS FOR "+fullName);
-                        for(int i=0;i<nbFingers;i++){
-                            JSONObject finger = allFingers.getJSONObject(i);
-                            String fingerR = finger.getString("Finger");
-                            Log.e("FINGERPRINTS","FINGER :  "+fingerR);
-                            byte[] fp = helper.base64ToByteArray(finger.getString("FingerPrint"));
-                            byte[] tp = helper.base64ToByteArray(finger.getString("Template"));
-                            db.saveFingerPrintsFromServer(employeeID, fingerR, fp, tp);
-                        }
-                    }else{
-                        Log.e("FINGERPRINTS","THERE ARE NO FINGERPRINTS FOR "+fullName);
-                    }
-                    checkListNoFingerPrints();
-                    showProgress("Fingerprints Importation starts...", false);
-                    showMessage(true, "Fingerprints Importation done.");
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-            }
-
-            @Override
-            public void onFailure(Call<JsonObject> call, Throwable t) {
-                showProgress("", false);
-                showMessage(false, "PLEASE VERIFY YOUR CREDENTIALS OR  NETWORK CONNECTION...");
-                //Toast.makeText(getApplicationContext(), "Unable to fetch json: " + t.getMessage(), Toast.LENGTH_LONG).show();
-                Log.e("SERVER", t.getMessage());
-            }
-        });
-    }
 
     //GET THE FP FOR AN EMPLOYEE FROM THE SERVER
     private void ImportEmployeesFingerPrints(){
