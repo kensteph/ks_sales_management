@@ -386,7 +386,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return salesToSync;
     }
 
-
     //GET SALES DESCRIPTION
     public List<Order> getSaleDetails(int saleId) {
         SQLiteDatabase db = this.getWritableDatabase();
@@ -516,6 +515,21 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return nb;
     }
 
+    //FINGERPRINTS COUNT TO SYNC
+    public int getEmployeeCount() {
+        SQLiteDatabase db = this.getWritableDatabase();
+        String selectQuery ="SELECT COUNT(*) as tot FROM "+TABLE_EMPLOYEES;
+        Cursor cursor2 = db.rawQuery(selectQuery, null);
+        int nb=0;
+        if(cursor2.moveToNext()) {
+            nb = cursor2.getInt(cursor2.getColumnIndexOrThrow("tot"));
+        }
+
+        cursor2.close();
+        return nb;
+    }
+
+
     //GET THE MAX USER ID FROM THE DB
     public int getMaxUserIdFromLocalDB() {
         SQLiteDatabase db = this.getWritableDatabase();
@@ -606,6 +620,26 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         SQLiteDatabase db = this.getWritableDatabase();
         List<Employee> employeeList = new ArrayList<Employee>(); // Create an ArrayList object
         String query="SELECT  DISTINCT(emp.employe_id) employee_id ,employe_prenom,employe_nom,employe_code,entreprise_id  FROM employes emp  LEFT  JOIN  empreintes fp  ON  emp.employe_id=fp.employe_id WHERE template IS  NULL;";
+        Cursor cursor2 = db.rawQuery(query, null);
+        while(cursor2.moveToNext()) {
+            String prenom = cursor2.getString(cursor2.getColumnIndexOrThrow("employe_prenom"));
+            String nom = cursor2.getString(cursor2.getColumnIndexOrThrow("employe_nom"));
+            String code = cursor2.getString(cursor2.getColumnIndexOrThrow("employe_code"));
+            int idEmp = cursor2.getInt(cursor2.getColumnIndexOrThrow("employee_id"));
+            int entreprise_id = cursor2.getInt(cursor2.getColumnIndexOrThrow("entreprise_id"));
+            Employee employee = new Employee(idEmp,entreprise_id,code,prenom,nom);
+            employeeList.add(employee);
+        }
+        Log.e("EMPLOYEE DATA","FOUND : "+employeeList.size());
+        cursor2.close();
+        return employeeList;
+    }
+
+    //GET ALL EMPLOYEES WITH NO FINGER PRINTS FROM THE DB
+    public List<Employee> getEmployeesWithFingerPrintsFromDB() {
+        SQLiteDatabase db = this.getWritableDatabase();
+        List<Employee> employeeList = new ArrayList<Employee>(); // Create an ArrayList object
+        String query="SELECT  DISTINCT(emp.employe_id) employee_id ,employe_prenom,employe_nom,employe_code,entreprise_id  FROM employes emp  LEFT  JOIN  empreintes fp  ON  emp.employe_id=fp.employe_id WHERE template IS NOT NULL;";
         Cursor cursor2 = db.rawQuery(query, null);
         while(cursor2.moveToNext()) {
             String prenom = cursor2.getString(cursor2.getColumnIndexOrThrow("employe_prenom"));

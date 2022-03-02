@@ -15,6 +15,16 @@
         android:textSize="20dp"
         android:layout_gravity="center"
         />
+
+    <Button
+        android:id="@+id/btnRetry"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="10dp"
+        android:layout_gravity="center"
+        android:text="Search Fingerprints to Import"
+        />
+
     <Button
         android:id="@+id/btnImportFingerPrints"
         android:layout_width="match_parent"
