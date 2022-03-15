@@ -44,7 +44,7 @@ public interface ApiInterface {
     Call<JsonObject> getEmployeeFingerPrints(@Field("id") int employeeRef,@Field("Email") String email,@Field("Password") String password);
 
     //GET MULTIPLE EMPLOYEES FINGERPRINTS
-    @POST("EmployeData/GetEmployeesFingerPoint")
+    @POST("EmployeData/GetNEmployeesFingerPoint")
     Call<JsonObject> getLimitedFingerPrints(@Body JsonObject json);
 
     //GET EMPLOYEE'S ID WITH FINGERPRINT FROM THE SERVER NOT IN LOCAL DB

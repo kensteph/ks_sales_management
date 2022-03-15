@@ -3,8 +3,16 @@ package com.snack_bar.model;
 import java.io.Serializable;
 
 public class Employee implements Serializable {
-    private int employee_id,employee_entreprise;
+    private int employee_id,employee_entreprise,nbFingerPrints;
     private String employee_code,employee_prenom,employee_nom,full_name;
+
+    public int getNbFingerPrints() {
+        return nbFingerPrints;
+    }
+
+    public void setNbFingerPrints(int nbFingerPrints) {
+        this.nbFingerPrints = nbFingerPrints;
+    }
 
     public String getFull_name() {
         return full_name;

@@ -184,7 +184,7 @@ public class EmployeeListActivity extends AppCompatActivity implements EmployeeA
                             Log.e("FINGERPRINTS","FINGER :  "+fingerR);
                             byte[] fp = helper.base64ToByteArray(finger.getString("FingerPrint"));
                             byte[] tp = helper.base64ToByteArray(finger.getString("Template"));
-                            db.saveFingerPrintsFromServer(employeeID, fingerR, fp, tp);
+                            db.saveFingerPrintsFromServer(employeeID, fingerR, null, tp);
                         }
                         showProgress("Fingerprints Importation starts...", false);
                         showMessage(true, "Fingerprints Importation done.");

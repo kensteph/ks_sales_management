@@ -599,7 +599,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public List<Employee> getAllEmployeesFromDB() {
         SQLiteDatabase db = this.getWritableDatabase();
         List<Employee> employeeList = new ArrayList<Employee>(); // Create an ArrayList object
-        String query="SELECT * FROM employes ORDER BY employe_code ASC";
+        //String query="SELECT * FROM employes ORDER BY employe_code ASC";
+        String query="SELECT e.*, IFNULL(nb_fp,0) nb_fp FROM employes e  LEFT JOIN  (SELECT  employe_id,COUNT(template) nb_fp  FROM  empreintes  GROUP BY employe_id) fp  ON e.employe_id=fp.employe_id ORDER BY employe_code ASC;";
         Cursor cursor2 = db.rawQuery(query, null);
         while(cursor2.moveToNext()) {
             String prenom = cursor2.getString(cursor2.getColumnIndexOrThrow("employe_prenom"));
@@ -607,7 +608,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             String code = cursor2.getString(cursor2.getColumnIndexOrThrow("employe_code"));
             int idEmp = cursor2.getInt(cursor2.getColumnIndexOrThrow("employe_id"));
             int entreprise_id = cursor2.getInt(cursor2.getColumnIndexOrThrow("entreprise_id"));
+            int nb_finger_print_found = cursor2.getInt(cursor2.getColumnIndexOrThrow("nb_fp"));
             Employee employee = new Employee(idEmp,entreprise_id,code,prenom,nom);
+            employee.setNbFingerPrints(nb_finger_print_found);
             employeeList.add(employee);
         }
         Log.d("EMPLOYEE DATA","FOUND : "+employeeList.size());

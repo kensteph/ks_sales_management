@@ -106,13 +106,12 @@ public class ImportFingerPrints extends AppCompatActivity {
         nbEmployeesWithFP = withFingerPrintsList.size();
         int total_employee = db.getEmployeeCount();
         nbFingerPrintsToImport =  total_employee-nbEmployeesWithFP;
+        //GET THE MISSING EMPLOYEE LIST WITH FP FROM SERVER
+        getEmployeesIdWithFpMissingInLocal();
         if (nbFingerPrintsToImport == 0) {
             btnImportFingerPrints.setVisibility(View.INVISIBLE);
         }
-        //GET THE MISSING EMPLOYEE LIST WITH FP FROM SERVER
-        getEmployeesIdWithFpMissingInLocal();
-
-        nbFp.setText(nbFingerPrintsToImport + " Fingerprints to import");
+        nbFp.setText(nbFingerPrintsToImport + " Missing Fingerprints");
         Log.e("FINGERPRINTS","EMPLOYEES WITH FP : "+nbEmployeesWithFP);
         Log.e("FINGERPRINTS","FINGERPRINTS TO IMPORT : "+nbFingerPrintsToImport);
     }
@@ -143,8 +142,10 @@ public class ImportFingerPrints extends AppCompatActivity {
         if(nbEmployeesWithFP==0) {
             IDS.add(0);
         }
+
         params.add("EmployeesId",IDS);
         params.add("Login",login);
+
         Log.e("PARAMS_ID_SEND", params.toString());
 
 
@@ -166,9 +167,18 @@ public class ImportFingerPrints extends AppCompatActivity {
                     Log.e("FP_TOTAL_FOUND", ""+nbEmployee);
                     Log.e("FP_LIST", AllEmployees.toString());
                     showProgress("", false);
-                    Toast.makeText(getApplicationContext(), "Ready to Sync!!..", Toast.LENGTH_LONG).show();
-                    btnImportFingerPrints.setVisibility(View.VISIBLE);
-                    btnRetry.setVisibility(View.INVISIBLE);
+
+                    if(nbEmployee==0){
+                        btnImportFingerPrints.setVisibility(View.INVISIBLE);
+                        btnRetry.setVisibility(View.VISIBLE);
+                    }else{
+                        btnImportFingerPrints.setVisibility(View.VISIBLE);
+                        //btnImportFingerPrints.setText(nbEmployee+"/"+nbFingerPrintsToImport);
+                        nbFp.setText(nbEmployee+ " Fingerprints to import");
+                        Toast.makeText(getApplicationContext(), "Ready to import!!..", Toast.LENGTH_LONG).show();
+                        btnRetry.setVisibility(View.INVISIBLE);
+                    }
+
                 } catch (JSONException e) {
                     e.printStackTrace();
                     showProgress("", false);
@@ -199,18 +209,22 @@ public class ImportFingerPrints extends AppCompatActivity {
         JsonArray IDS = new JsonArray();
 
         for (int i = 0; i < employeeIdsToSync.length(); i++) {
-            int pos=i+1;
             try {
                 int employeeID= (int) employeeIdsToSync.get(i);
                 IDS.add(employeeID);
+                if(i==49){
+                    break;
+                }
                 //Log.e(pos+"-EMP-ID",""+employeeID);
             } catch (JSONException e) {
                 e.printStackTrace();
             }
+
         }
 
         params.add("EmployeesId",IDS);
         params.add("Login",login);
+        params.addProperty("Limit",50);
         Log.e("PARAMS_SENT_SERV", params.toString());
         // Using the Retrofit
         ApiInterface apiService =ApiClient.getClient().create(ApiInterface.class);
